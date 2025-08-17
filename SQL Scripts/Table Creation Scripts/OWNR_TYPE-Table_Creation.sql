@@ -1,0 +1,47 @@
+USE [Bot_Of_Holding_DEV]
+GO
+
+/****** Object:  Table [dbo].[OWNR_TYPE]    Script Date: 6/8/2025 3:47:05 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[OWNR_TYPE](
+	[OWNR_TYPE_ID] [numeric](9, 0) IDENTITY(1,1) NOT NULL,
+	[OWNR_TYPE_NME] [varchar](25) NOT NULL,
+	[OWNR_TYPE_DESC] [varchar](150) NOT NULL,
+	[DEL_INDC] [char](1) NOT NULL,
+	[DEL_DTTM] [datetime] NULL,
+	[LST_MDFD_DTTM] [datetime] NOT NULL,
+ CONSTRAINT [PK_OWNR_TYPE] PRIMARY KEY CLUSTERED 
+(
+	[OWNR_TYPE_ID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY],
+ CONSTRAINT [UNIQUE_OWNR_NME_CNSTR] UNIQUE NONCLUSTERED 
+(
+	[OWNR_TYPE_NME] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[OWNR_TYPE] ADD  CONSTRAINT [DF_OWNR_TYPE_DEL_INDC]  DEFAULT ('N') FOR [DEL_INDC]
+GO
+
+ALTER TABLE [dbo].[OWNR_TYPE] ADD  CONSTRAINT [DF_OWNR_TYPE_LST_MDFD_DTTM]  DEFAULT (getdate()) FOR [LST_MDFD_DTTM]
+GO
+
+ALTER TABLE [dbo].[OWNR_TYPE]  WITH CHECK ADD  CONSTRAINT [CK_OWNR_TYPE_DEL_INDC_VALUS] CHECK  (([DEL_INDC]='N' OR [DEL_INDC]='Y'))
+GO
+
+ALTER TABLE [dbo].[OWNR_TYPE] CHECK CONSTRAINT [CK_OWNR_TYPE_DEL_INDC_VALUS]
+GO
+
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Defines owner type objects, which are used to determine where to search for an object''s owner' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'OWNR_TYPE'
+GO
+
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Only allow Y or N as acceptable values for DEL_INDC' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'OWNR_TYPE', @level2type=N'CONSTRAINT',@level2name=N'CK_OWNR_TYPE_DEL_INDC_VALUS'
+GO
+
+

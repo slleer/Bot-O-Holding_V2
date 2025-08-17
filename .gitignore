@@ -1,0 +1,31 @@
+# Compiled Java class files and build outputs
+**/target/
+*.jar
+*.war
+*.ear
+
+# Log files
+*.log
+*.log.*.gz
+
+# Maven
+# Ignore the wrapper JAR file, but keep the scripts
+.mvn/wrapper/maven-wrapper.jar
+
+# IDE specific files
+# IntelliJ
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# VS Code
+.vscode/
+
+# Sensitive configuration files
+# It's best practice to ignore these to prevent committing secrets.
+# Use environment variables or a secure vault for production secrets.
+/api/src/main/resources/application-dev.properties
+/api/src/main/resources/application-prod.properties
+/bot/src/main/resources/application-dev.properties
+/bot/src/main/resources/application-prod.properties
