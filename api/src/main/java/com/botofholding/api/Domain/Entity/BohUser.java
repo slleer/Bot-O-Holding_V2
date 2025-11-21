@@ -21,14 +21,14 @@ import java.util.Optional;
 @NoArgsConstructor
 public class BohUser extends Owner {
 
-    @Column(name = "USR_NME")
+    @Column(name = "USR_NME", length = 50)
     @EqualsAndHashCode.Include
     private String bohUserName;
 
-    @Column(name = "USR_TAG")
+    @Column(name = "USR_TAG", length = 75)
     private String bohUserTag;
 
-    @Column(name = "GLBL_USR_NME")
+    @Column(name = "GLBL_USR_NME", length = 50)
     private String bohGlobalUserName;
 
     // --- Auditing Fields (Timestamps Only) ---

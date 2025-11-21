@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Repository
 public interface ContainerItemRepository extends JpaRepository<ContainerItem, Long> {
@@ -40,9 +41,6 @@ public interface ContainerItemRepository extends JpaRepository<ContainerItem, Lo
             "AND i.parent = true " +
             "ORDER BY ci.lastModifiedDateTime DESC")
     List<ContainerItem> findAllParentsFromActiveContainer(@Param("prefix") String prefix, @Param("user") BohUser user, Pageable pageable);
-
-    @Query("SELECT DISTINCT ci FROM ContainerItem ci LEFT JOIN FETCH ci.item i WHERE ci.parent in :containerItems")
-    List<ContainerItem> fetchChildrenForContainerItems(@Param("containerItems") List<ContainerItem> containerItems);
 
     String AUTOCOMPLETE_CTE = """
             WITH ItemPath AS (

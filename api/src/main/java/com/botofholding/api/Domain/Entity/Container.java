@@ -6,10 +6,11 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.Collections;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Table(name = "CNTNR")
 @Entity
@@ -29,15 +30,15 @@ public class Container extends AuditableEntity {
     @JoinColumn(name = "OWNER_ID", nullable = false)
     private Owner owner;
 
-    @Column(name = "CNTNR_NME")
+    @Column(name = "CNTNR_NME", length = 75)
     @EqualsAndHashCode.Include
     private String containerName;
 
-    @Column(name = "CNTNR_DESC")
+    @Column(name = "CNTNR_DESC", length = 250)
     private String containerDescription;
 
     @OneToMany(mappedBy = "container", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ContainerItem> containerItems;
+    private Set<ContainerItem> containerItems;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "CNTNR_TYPE_ID")

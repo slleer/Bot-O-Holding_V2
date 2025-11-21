@@ -4,13 +4,16 @@ import java.math.BigDecimal;
 
 import com.botofholding.contract.DTO.Response.*;
 import com.botofholding.bot.Utility.config.ContainerDisplayOptions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.function.Function;
 
 public final class MessageFormatter {
+
+    private static final Logger logger = LoggerFactory.getLogger(MessageFormatter.class);
 
     private static final int DISCORD_CHAR_LIMIT = 1950; // Safety margin for message length
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("MMMM d, yyyy - h:mm a");
@@ -238,64 +241,49 @@ public final class MessageFormatter {
         }
 
         if (options.isDisplayItems() && containerDto.getItems() != null && !containerDto.getItems().isEmpty()) {
-//            sb.append(subBullet).append(bold("Contents:")).append("\n");
+            appendWithSplitting(chunks, subBullet + bold("Contents:") + "\n", continuedHeader);
 
-            formatChildrenContainerItems(containerDto.getItems(), options, chunks, subBullet, continuedHeader);
-//            containerDto.getItems().stream()
-//                .sorted(java.util.Comparator.comparing(ContainerItemSummaryDto::getItemName))
-//                .forEach(item -> {
-//                    sb.append(subBullet).append(item.getItemName());
-//                    String x2_SubBullet = SUB_BULLET_INDENT.apply(subBullet);
-//                    if (item.getQuantity() > 1) {
-//                        sb.append(" ").append(bold(String.format("x%d", item.getQuantity())));
-//                    }
-//                    sb.append("\n");
-//                    if (options.isDisplayNote() && item.getUserNote() != null && !item.getUserNote().isBlank()) {
-//                        appendLineWithSplitting(chunks, x2_SubBullet, "-# ", item.getUserNote(), EMPTY_LABEL_FORMATTER, ITALIC_VALUE_FORMATTER, continuedHeader);
-//                    }
-//                    if (options.isDisplayChildrenItems() && item.getChildren() != null && !item.getChildren().isEmpty()) {
-//                        formatContainerItems(item.getChildren(), options, sb, x2_SubBullet);
-//                    }
-//                    if (options.isDisplayContainerItemId()) {
-//                        appendLineWithSplitting(chunks, x2_SubBullet, "Id", String.valueOf(item.getContainerItemId()), PLAIN_LABEL_FORMATTER, PLAIN_VALUE_FORMATTER, continuedHeader);
-//                    }
-//                    if (options.isDisplayItemId()) {
-//                        appendLineWithSplitting(chunks, x2_SubBullet, "Item Id", String.valueOf(item.getItemId()), PLAIN_LABEL_FORMATTER, PLAIN_VALUE_FORMATTER, continuedHeader);
-//                    }
-//                    if (options.isDisplayLastModified()){
-//                        appendLineWithSplitting(chunks, x2_SubBullet, "Last Modified", item.getLastModified().format(DATE_TIME_FORMATTER), PLAIN_LABEL_FORMATTER, PLAIN_VALUE_FORMATTER, continuedHeader);
-//                    }
-//                });
+            formatAndRenderItemTree(containerDto.getItems(), options, chunks, SUB_BULLET_INDENT.apply(subBullet), continuedHeader);
         }
         return chunks.stream().map(StringBuilder::toString).filter(s -> !s.isEmpty()).toList();
     }
 
-    private static void formatChildrenContainerItems(List<ContainerItemSummaryDto> items, ContainerDisplayOptions options, List<StringBuilder> chunks, String subBullet, String continuedHeader) {
+    private static void formatAndRenderItemTree(List<ContainerItemSummaryDto> allItems, ContainerDisplayOptions options, List<StringBuilder> chunks, String initialBullet, String continuedHeader) {
+        // Sort all items by their full path. This naturally groups parents with their children.
+        // e.g., "Backpack" comes before "Backpack > Potion Pouch"
+        List<ContainerItemSummaryDto> sortedItems = allItems.stream()
+                .sorted(Comparator.comparing(ContainerItemSummaryDto::getPath))
+                .toList();
 
-        items.stream()
-                .sorted(java.util.Comparator.comparing(ContainerItemSummaryDto::getItemName))
-                .forEach(item -> {
-                    String initialChildLine = subBullet + item.getItemName() + (item.getQuantity() > 1 ? " " + bold(String.format("x%d", item.getQuantity())) : "") + "\n";
-                    // The item's main line was being calculated but never added to the output.
-                    appendWithSplitting(chunks, initialChildLine, continuedHeader);
-                    String x2_SubBullet = SUB_BULLET_INDENT.apply(subBullet);
-                    if (options.isDisplayNote() && item.getUserNote() != null && !item.getUserNote().isBlank()) {
-                        appendLineWithSplitting(chunks, x2_SubBullet, "-# ", item.getUserNote(), EMPTY_LABEL_FORMATTER, ITALIC_VALUE_FORMATTER, continuedHeader);
-                    }
-                    if (options.isDisplayChildrenItems() && item.getChildren() != null && !item.getChildren().isEmpty()) {
-                        formatChildrenContainerItems(item.getChildren(), options, chunks, x2_SubBullet, continuedHeader);
-                    }
-                    if (options.isDisplayContainerItemId()) {
-                        appendLineWithSplitting(chunks, x2_SubBullet, "Id", String.valueOf(item.getContainerItemId()), PLAIN_LABEL_FORMATTER, PLAIN_VALUE_FORMATTER, continuedHeader);
-                    }
-                    if (options.isDisplayItemId()) {
-                        appendLineWithSplitting(chunks, x2_SubBullet, "Item Id", String.valueOf(item.getItemId()), PLAIN_LABEL_FORMATTER, PLAIN_VALUE_FORMATTER, continuedHeader);
-                    }
-                    if (options.isDisplayLastModified()){
-                        appendLineWithSplitting(chunks, x2_SubBullet, "Last Modified", item.getLastModified().format(DATE_TIME_FORMATTER), PLAIN_LABEL_FORMATTER, PLAIN_VALUE_FORMATTER, continuedHeader);
-                    }
-                });
+        for (ContainerItemSummaryDto item : sortedItems) {
+            // Determine the indent level by counting the path separators.
+            int depth = item.getPath().split(" > ").length - 1;
+            if(depth > 0)
+                depth++;
+            String bullet = "  ".repeat(depth) + initialBullet;
 
+            // Get just the item's own name, not the full path.
+            String[] pathParts = item.getPath().split(" > ");
+            //String itemName = pathParts[pathParts.length - 1];
+
+            String itemLine = bullet + (item.getQuantity() > 1 ? bold(String.format("%dx ", item.getQuantity())) : "") + item.getItemName()  + "\n";
+            appendWithSplitting(chunks, itemLine, continuedHeader);
+
+            // Print the details for this item with one extra level of indent.
+            String detailBullet = "  " + bullet;
+            if (options.isDisplayNote() && item.getUserNote() != null && !item.getUserNote().isBlank()) {
+                appendLineWithSplitting(chunks, detailBullet, "-# ", item.getUserNote(), EMPTY_LABEL_FORMATTER, ITALIC_VALUE_FORMATTER, continuedHeader);
+            }
+            if (options.isDisplayContainerItemId()) {
+                appendLineWithSplitting(chunks, detailBullet, "Id", String.valueOf(item.getContainerItemId()), PLAIN_LABEL_FORMATTER, PLAIN_VALUE_FORMATTER, continuedHeader);
+            }
+            if (options.isDisplayItemId()) {
+                appendLineWithSplitting(chunks, detailBullet, "Item Id", String.valueOf(item.getItemId()), PLAIN_LABEL_FORMATTER, PLAIN_VALUE_FORMATTER, continuedHeader);
+            }
+            if (options.isDisplayLastModified()){
+                appendLineWithSplitting(chunks, detailBullet, "Last Modified", item.getLastModified().format(DATE_TIME_FORMATTER), PLAIN_LABEL_FORMATTER, PLAIN_VALUE_FORMATTER, continuedHeader);
+            }
+        }
     }
 
     public static List<String> formatContainerReply(List<ContainerSummaryDto> dtos) {

@@ -33,11 +33,11 @@ public class ContainerType extends AuditableEntity {
     @EqualsAndHashCode.Include
     private Long containerTypeId;
 
-    @Column(name = "CNTNR_TYPE_NME")
+    @Column(name = "CNTNR_TYPE_NME", length = 50)
     @EqualsAndHashCode.Include
     private String containerTypeName;
 
-    @Column(name = "CNTNR_TYPE_DESC")
+    @Column(name = "CNTNR_TYPE_DESC", length = 250)
     private String containerTypeDescription;
 
     @Override

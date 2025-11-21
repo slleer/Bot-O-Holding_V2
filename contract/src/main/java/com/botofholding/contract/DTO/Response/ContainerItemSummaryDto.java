@@ -16,6 +16,6 @@ public class ContainerItemSummaryDto {
     private Integer quantity;
     private String userNote;
     private LocalDateTime lastModified;
-    private List<ContainerItemSummaryDto> children;
-    private ContainerItemSummaryDto parent;
+    private Long parentId;
+    private String path;
 }

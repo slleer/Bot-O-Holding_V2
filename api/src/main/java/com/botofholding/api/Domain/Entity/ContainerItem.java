@@ -8,8 +8,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 @Table(name = "CNTNR_ITEM")
 @Entity
@@ -37,7 +37,7 @@ public class ContainerItem extends AuditableEntity {
     @Column(name = "ITM_QTY")
     private Integer quantity;
 
-    @Column(name = "USER_NOTE")
+    @Column(name = "USER_NOTE", length = 350)
     private String userNote;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -50,7 +50,7 @@ public class ContainerItem extends AuditableEntity {
             cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH},
             fetch = FetchType.LAZY
     )
-    private List<ContainerItem> children = new ArrayList<>();
+    private Set<ContainerItem> children = new HashSet<>();
 
     public void addChild(ContainerItem child) {
         children.add(child);

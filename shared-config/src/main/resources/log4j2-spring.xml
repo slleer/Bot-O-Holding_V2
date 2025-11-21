@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- [WORLD-CLASS] Centralized Log4j2 configuration for all modules. -->
+<!-- This file uses Spring Boot property lookups to parameterize module-specific settings. -->
+<Configuration>
+    <!-- Define properties that can be overridden or referenced. -->
+    <Properties>
+        <!-- Use the application name defined in each module's application.properties for log file naming. -->
+        <Property name="LOG_FILE_NAME">${spring:spring.application.name}</Property>
+        <Property name="LOG_PATH">./logs</Property>
+    </Properties>
+
+    <Appenders>
+        <!-- Console Appender: Optimized for development with colors and detailed location info. -->
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout
+                    pattern="%style{%d{MMM dd, yyyy - HH:mm:ss,SSS}}{red} : [%t] %highlight{[%-6p]}{FATAL=red BG_Yellow, ERROR=red, WARN=yellow bold, INFO=green, DEBUG=blue bold, TRACE=cyan} %style{%.45C{1}.%M(%L)}{magenta} - %highlight{%m%n}{FATAL=red BG_Yellow, ERROR=red, WARN=yellow bold, INFO=green, DEBUG=blue bold, TRACE=cyan}"
+                    disableAnsi="false" />
+<!--            pre shared-config patter, use if method and line number logging is too slow-->
+<!--                    pattern="%style{%d{MMM dd, yyyy - HH:mm:ss,SSS}}{red} : [%t] %highlight{[%-6p]}{FATAL=red BG_Yellow, ERROR=red, WARN=yellow bold, INFO=green, DEBUG=blue bold, TRACE=cyan} %style{%.45C{1}}{magenta} - %highlight{%m%n}{FATAL=red BG_Yellow, ERROR=red, WARN=yellow bold, INFO=green, DEBUG=blue bold, TRACE=cyan}"-->
+<!--                    disableAnsi="false" />-->
+        </Console>
+
+        <!-- RollingFile Appender: Writes to a file named after the application (e.g., api.log, bot.log). -->
+        <RollingFile name="RollingFile"
+                     fileName="${LOG_PATH}/${LOG_FILE_NAME}.log"
+                     filePattern="${LOG_PATH}/$${date:yyyy-MM}/${LOG_FILE_NAME}-%d{MM-dd-yyyy}-%i.log.gz">
+            <PatternLayout>
+                <!-- A standardized, detailed pattern for file logs including location info. -->
+                <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%p] [%t] %c{1.}.%M(%L) - %m%n</pattern>
+<!--            pre shared-config patter, use if method and line number logging is too slow-->
+<!--                <pattern>%d [%p] [%t] %C{1} %m%n</pattern>-->
+            </PatternLayout>
+            <Policies>
+                <OnStartupTriggeringPolicy />
+                <SizeBasedTriggeringPolicy size="10 MB" />
+                <TimeBasedTriggeringPolicy />
+            </Policies>
+        </RollingFile>
+    </Appenders>
+
+    <Loggers>
+        <Root level="INFO">
+            <AppenderRef ref="Console" />
+            <AppenderRef ref="RollingFile" />
+        </Root>
+
+        <!-- Application-specific logger: Set the base package to DEBUG for more detailed application logs. -->
+        <logger name="com.botofholding" level="DEBUG"/>
+    </Loggers>
+</Configuration>

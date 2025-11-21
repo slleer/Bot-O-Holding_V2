@@ -18,7 +18,7 @@ import java.util.List;
 @Entity
 @Table(name = "OWNER") // The base table for all owners
 @Inheritance(strategy = InheritanceType.JOINED) // This is the key!
-@DiscriminatorColumn(name = "OWNER_TYPE", discriminatorType = DiscriminatorType.STRING) // Column to identify subtype
+@DiscriminatorColumn(name = "OWNER_TYPE", discriminatorType = DiscriminatorType.STRING, length = 10) // Column to identify subtype
 @Getter
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @NoArgsConstructor

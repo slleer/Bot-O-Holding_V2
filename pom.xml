@@ -21,8 +21,9 @@
 
     <modules>
         <module>api</module>
-        <module>contract</module>
         <module>bot</module>
+        <module>contract</module>
+        <module>shared-config</module>
     </modules>
 
     <properties>
@@ -44,6 +45,21 @@
                 <groupId>${project.groupId}</groupId>
                 <artifactId>contract</artifactId>
                 <version>${revision}</version>
+			</dependency>
+			<dependency>
+				<groupId>${project.groupId}</groupId>
+				<artifactId>api</artifactId>
+				<version>${revision}</version>
+			</dependency>
+			<dependency>
+				<groupId>${project.groupId}</groupId>
+				<artifactId>bot</artifactId>
+				<version>${revision}</version>
+			</dependency>
+			<dependency>
+				<groupId>${project.groupId}</groupId>
+				<artifactId>shared-config</artifactId>
+				<version>${revision}</version>
             </dependency>
 
             <!-- Spring Boot Starters with Centralized Logging Exclusions -->
@@ -170,6 +186,11 @@
                             </exclude>
                         </excludes>
                     </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>build-helper-maven-plugin</artifactId>
+                    <version>3.6.0</version>
                 </plugin>
             </plugins>
         </pluginManagement>

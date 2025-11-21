@@ -20,6 +20,10 @@
 			<groupId>com.botofholding</groupId>
 			<artifactId>contract</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>com.botofholding</groupId>
+			<artifactId>shared-config</artifactId>
+		</dependency>
 
 		<!-- Spring Boot Starters (versions and logging exclusions managed by parent) -->
 		<dependency>
@@ -88,6 +92,12 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<!-- [ADD] H2 In-Memory Database for testing -->
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -95,29 +105,83 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
+				<!-- [DEFINITIVE FIX] This is the most explicit configuration to prevent IDE/Maven conflicts. -->
+				<!-- It defines a minimal baseline (Lombok only) and then adds MapStruct specifically for the main compile phase. -->
 				<configuration>
 					<annotationProcessorPaths>
-						<path>
-							<groupId>org.mapstruct</groupId>
-							<artifactId>mapstruct-processor</artifactId>
-							<version>${org.mapstruct.version}</version>
-						</path>
+						<!-- This baseline configuration applies to all executions (like test-compile) unless overridden. -->
 						<path>
 							<groupId>org.projectlombok</groupId>
 							<artifactId>lombok</artifactId>
 							<version>${org.projectlombok.version}</version>
 						</path>
-						<path>
-							<groupId>org.projectlombok</groupId>
-							<artifactId>lombok-mapstruct-binding</artifactId>
-							<version>0.2.0</version> <!-- This version is fine -->
-						</path>
 					</annotationProcessorPaths>
-					<compilerArgs>
-						<arg>-Amapstruct.suppressGeneratorTimestamp=true</arg>
-						<arg>-Amapstruct.suppressGeneratorVersionInfoComment=true</arg>
-					</compilerArgs>
 				</configuration>
+				<executions>
+					<execution>
+						<id>default-compile</id>
+						<phase>compile</phase>
+						<goals>
+							<goal>compile</goal>
+						</goals>
+						<configuration>
+							<!-- This configuration adds MapStruct and its args ONLY for the main compile phase. -->
+							<annotationProcessorPaths>
+								<path>
+									<groupId>org.mapstruct</groupId>
+									<artifactId>mapstruct-processor</artifactId>
+									<version>${org.mapstruct.version}</version>
+								</path>
+								<path>
+									<groupId>org.projectlombok</groupId>
+									<artifactId>lombok</artifactId>
+									<version>${org.projectlombok.version}</version>
+								</path>
+								<path>
+									<groupId>org.projectlombok</groupId>
+									<artifactId>lombok-mapstruct-binding</artifactId>
+									<version>0.2.0</version>
+								</path>
+							</annotationProcessorPaths>
+							<compilerArgs>
+								<arg>-Amapstruct.suppressGeneratorTimestamp=true</arg>
+								<arg>-Amapstruct.suppressGeneratorVersionInfoComment=true</arg>
+							</compilerArgs>
+						</configuration>
+					</execution>
+					<execution>
+						<id>default-testCompile</id>
+						<phase>test-compile</phase>
+						<goals>
+							<goal>testCompile</goal>
+						</goals>
+						<configuration>
+							<compilerArgs>
+								<arg/> <!-- This will clear the inherited compilerArgs -->
+							</compilerArgs>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<!-- [FIX] Explicitly add the generated sources directory to the build path. -->
+			<!-- This resolves IDE confusion about source roots vs. output paths, fixing the "intersects" warning. -->
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>build-helper-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>add-source</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>add-source</goal>
+						</goals>
+						<configuration>
+							<sources>
+								<source>${project.build.directory}/generated-sources/annotations</source>
+							</sources>
+						</configuration>
+					</execution>
+				</executions>
 			</plugin>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>

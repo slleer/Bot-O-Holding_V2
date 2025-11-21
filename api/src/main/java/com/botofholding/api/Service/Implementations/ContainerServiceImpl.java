@@ -127,7 +127,7 @@ public class ContainerServiceImpl implements ContainerService {
 
         // The 'actor' is the user whose context we need for the 'active' flag.
         BohUser userContext = (actor instanceof BohUser) ? (BohUser) actor : null;
-
+        logger.info("Attempting to return the found container(s).");
         return containers.stream()
                 .map(container -> containerMapper.toSummaryDto(container, userContext))
                 .collect(Collectors.toList());
@@ -221,16 +221,7 @@ public class ContainerServiceImpl implements ContainerService {
             throw new UnsupportedOperationException("Only users can activate containers.");
         }
 
-        // Step 1: Fetch the container and all its associated items in a single query.
-        // This avoids the MultipleBagFetchException and Cartesian product issues.
-        Container activeContainer = containerRepository.findActiveContainerWithItemsForUser(user)
-                .orElseThrow(() -> new ContainerNotFoundException("No active container found for user " + user.getDisplayName()));
-
-        // Step 2: If there are items, fetch all their direct children and the children's associated item data
-        // in a second, efficient query.
-        if (!activeContainer.getContainerItems().isEmpty()) {
-            containerItemRepository.fetchChildrenForContainerItems(activeContainer.getContainerItems());
-        }
+        Container activeContainer = getActiveContainerAndLoadHierarchy(user);
 
         return containerMapper.toSummaryDto(activeContainer, user);
     }
@@ -249,13 +240,7 @@ public class ContainerServiceImpl implements ContainerService {
             throw new UnsupportedOperationException("Only users can have an active container to add items to.");
         }
 
-        // 1. Find the active container for the user.
-        Container activeContainer = containerRepository.findActiveContainerWithItemsForUser(user)
-                .orElseThrow(() -> new ContainerNotFoundException("No active container found for user " + user.getDisplayName()));
-
-        if (!activeContainer.getContainerItems().isEmpty()) {
-            containerItemRepository.fetchChildrenForContainerItems(activeContainer.getContainerItems());
-        }
+        Container activeContainer = getActiveContainerAndLoadHierarchy(user);
         // 2. Find the item to be added. Prefer the ID if provided, as it's unambiguous.
         Optional<Item> itemById = Optional.ofNullable(addDto.getItemId())
                 .flatMap(itemRepository::findById);
@@ -323,7 +308,7 @@ public class ContainerServiceImpl implements ContainerService {
                     parent.addChild(containerItem);
                 }
                 activeContainer.getContainerItems().add(containerItem);
-                String location = (parent != null) ? containerItemMapper.mapItemName(parent) : activeContainer.getContainerName();
+                String location = (parent != null) ? containerItemMapper.mapItemPath(parent) : activeContainer.getContainerName();
                 message = String.format("Added %dx '%s' inside '%s'.", addDto.getQuantity(), itemToAdd.getItemName(), location);
             }
             if (addDto.getUserNote() != null && !addDto.getUserNote().isBlank()) {
@@ -350,7 +335,7 @@ public class ContainerServiceImpl implements ContainerService {
         // We must explicitly save and flush the container here.
         // This forces JPA to execute the SQL INSERT/UPDATE and trigger the auditing listeners (@PrePersist/@PreUpdate).
         // Without this, the lastModifiedDateTime on the ContainerItem would not be set before the mapping occurs,
-        // resulting in a null value in the response DTO.
+        // resulting in a null or stale value in the response DTO.
         Container savedContainer = containerRepository.saveAndFlush(activeContainer);
 
         ContainerSummaryDto summaryDto = containerMapper.toSummaryDto(savedContainer, user);
@@ -374,12 +359,7 @@ public class ContainerServiceImpl implements ContainerService {
         }
 
         logger.debug("Id: {}, name: {}, quantity: {}, dropChildren: {}", id, name, quantity, dropChildren);
-        Container activeContainer = containerRepository.findActiveContainerWithItemsForUser(user)
-                .orElseThrow(() -> new ContainerNotFoundException("No active container found for user " + user.getDisplayName()));
-
-        if (!activeContainer.getContainerItems().isEmpty()) {
-            containerItemRepository.fetchChildrenForContainerItems(activeContainer.getContainerItems());
-        }
+        Container activeContainer = getActiveContainerAndLoadHierarchy(user);
         // Find the specific ContainerItem to drop. Using the unique containerItemId is the most reliable way.
         ContainerItem foundContainerItem = findContainerItem(id, name, activeContainer);
 
@@ -482,12 +462,7 @@ public class ContainerServiceImpl implements ContainerService {
         }
 
         // 2. Get active container
-        Container activeContainer = containerRepository.findActiveContainerWithItemsForUser(user)
-                .orElseThrow(() -> new ContainerNotFoundException("No active container found for user " + user.getDisplayName()));
-
-        if (!activeContainer.getContainerItems().isEmpty()) {
-            containerItemRepository.fetchChildrenForContainerItems(activeContainer.getContainerItems());
-        }
+        Container activeContainer = getActiveContainerAndLoadHierarchy(user);
         // 3. Find the item to modify using the resilient finder.
         // This uses the ID if present, otherwise falls back to the name.
         ContainerItem itemToModify = findContainerItem(modifyDto.getContainerItemId(), modifyDto.getContainerItemName(), activeContainer);
@@ -501,7 +476,7 @@ public class ContainerServiceImpl implements ContainerService {
             // Allow clearing the note by passing an empty or blank string
             sb.append("note");
             itemToModify.setUserNote(modifyDto.getNote().isBlank() ? null : modifyDto.getNote());
-            logger.info("Updated note for item '{}' (ID: {})", containerItemMapper.mapItemName(itemToModify), itemToModify.getContainerItemId());
+            logger.info("Updated note for item '{}' (ID: {})", containerItemMapper.mapItemPath(itemToModify), itemToModify.getContainerItemId());
             modified = true;
         }
 
@@ -518,7 +493,7 @@ public class ContainerServiceImpl implements ContainerService {
                 itemToModify.getParent().removeChild(itemToModify);
             }
             newParent.addChild(itemToModify);
-            logger.info("Moved item '{}' into parent '{}'", containerItemMapper.mapItemName(itemToModify), containerItemMapper.mapItemName(newParent));
+            logger.info("Moved item '{}' into parent '{}'", containerItemMapper.mapItemPath(itemToModify), containerItemMapper.mapItemPath(newParent));
             sb.append(modified ? ", location" : "location");
             modified = true;
 
@@ -526,12 +501,12 @@ public class ContainerServiceImpl implements ContainerService {
             if (itemToModify.getParent() != null) {
                 // Move to root by severing the link with the current parent
                 itemToModify.getParent().removeChild(itemToModify);
-                logger.info("Moved item '{}' to the container root.", containerItemMapper.mapItemName(itemToModify));
+                logger.info("Moved item '{}' to the container root.", containerItemMapper.mapItemPath(itemToModify));
 
                 sb.append(modified ? ", location" : "location");
                 modified = true;
             } else {
-                logger.info("Item '{}' is already at the root. No move performed.", containerItemMapper.mapItemName(itemToModify));
+                logger.info("Item '{}' is already at the root. No move performed.", containerItemMapper.mapItemPath(itemToModify));
             }
         }
 
@@ -541,7 +516,7 @@ public class ContainerServiceImpl implements ContainerService {
             if (modifyDto.getNewQuantity() <= 0) {
                 throw new ValidationException("New quantity must be greater than 0.");
             }
-            logger.info("Updated quantity of item '{}' to {}.", containerItemMapper.mapItemName(itemToModify), modifyDto.getNewQuantity());
+            logger.info("Updated quantity of item '{}' to {}.", containerItemMapper.mapItemPath(itemToModify), modifyDto.getNewQuantity());
             itemToModify.setQuantity(modifyDto.getNewQuantity());
             sb.append(modified ? ", quantity" : "quantity");
             modified = true;
@@ -581,7 +556,7 @@ public class ContainerServiceImpl implements ContainerService {
         }
 
         return projections.stream()
-                .map(p -> new AutoCompleteDto(p.getId(), p.getLabel(), p.getDescription()))
+                .map(containerItemMapper::toAutoCompleteDto)
                 .collect(Collectors.toList());
     }
 
@@ -606,7 +581,7 @@ public class ContainerServiceImpl implements ContainerService {
         }
 
         return projections.stream()
-                .map(p -> new AutoCompleteDto(p.getId(), p.getLabel(), p.getDescription()))
+                .map(containerItemMapper::toAutoCompleteDto)
                 .collect(Collectors.toList());
     }
 
@@ -630,6 +605,19 @@ public class ContainerServiceImpl implements ContainerService {
 
 
         return containerMapper.toSummaryDto(containerToActivate, managedUser);
+    }
+
+    /**
+     * A private helper that reliably fetches the active container for a user and ensures its
+     * entire item hierarchy (including children of items) is loaded and ready for mapping.
+     *
+     * @param user The user for whom to find the active container.
+     * @return The fully initialized Container entity.
+     */
+    private Container getActiveContainerAndLoadHierarchy(BohUser user) {
+        // Use the single, highly-efficient query to fetch the entire object graph at once.
+        return containerRepository.findActiveContainerWithFullHierarchyForUser(user)
+                .orElseThrow(() -> new ContainerNotFoundException("No active container found for user " + user.getDisplayName()));
     }
 
     /**
@@ -657,7 +645,7 @@ public class ContainerServiceImpl implements ContainerService {
         } else { // TODO fix find by name to check both item's name and item's fully qualified location name (mapItemName)
                 //   because if no id, then autocomplete failed and might have just typed base name
             List<ContainerItem> potentialItems = container.getContainerItems().stream()
-                    .filter(ci -> name.equalsIgnoreCase(containerItemMapper.mapItemName(ci)))
+                    .filter(ci -> name.equalsIgnoreCase(containerItemMapper.mapItemPath(ci)))
                     .toList();
 
             if (potentialItems.isEmpty()) {
@@ -692,7 +680,7 @@ public class ContainerServiceImpl implements ContainerService {
     private void validateParentage(ContainerItem itemToMove, ContainerItem newParent) {
         // Rule 1: A new parent must be a parent-type item.
         if (!newParent.getItem().isParent()) {
-            throw new ValidationException("Item '" + containerItemMapper.mapItemName(newParent) + "' cannot contain other items.");
+            throw new ValidationException("Item '" + containerItemMapper.mapItemPath(newParent) + "' cannot contain other items.");
         }
         // Rule 2: An item cannot be its own parent.
         if (itemToMove != null && newParent.getContainerItemId().equals(itemToMove.getContainerItemId())) {

@@ -13,7 +13,7 @@ public interface ContainerMapper {
     @Mapping(source = "containerId", target = "containerId")
     @Mapping(source = "owner.displayName", target = "ownerDisplayName")
     @Mapping(source = "containerType.containerTypeName", target = "containerTypeName")
-    @Mapping(source = "containerItems", target = "items")
+    @Mapping(source = "container.containerItems", target = "items", qualifiedByName = "toSummaryDtoList")
     @Mapping(source = "container", target = "active", qualifiedByName = "mapIsActive")
     ContainerSummaryDto toSummaryDto(Container container, @Context BohUser currentUser);
 

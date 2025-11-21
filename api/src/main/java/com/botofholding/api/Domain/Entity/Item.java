@@ -22,26 +22,28 @@ public class Item extends AuditableEntity {
     @EqualsAndHashCode.Include
     private Long itemId;
 
-    @Column(name = "ITEM_NME")
+    // [BEST PRACTICE] Explicitly define the column length.
+    // This serves as documentation and is crucial for schema validation.
+    @Column(name = "ITEM_NME", length = 75)
     @EqualsAndHashCode.Include
     private String itemName;
 
     @Column(name = "ITEM_DESC")
+    @Lob // As discussed, @Lob is best for very long or unknown-length text.
     private String itemDescription;
 
     @Column(name = "WEIGHT")
     private Float weight;
 
-    @Column(name = "WEIGHT_UNIT")
+    @Column(name = "WEIGHT_UNIT", length = 25)
     private String weightUnit;
 
     @Column(name = "VALUE")
     private Float value;
 
-    @Column(name = "VALUE_UNIT")
+    @Column(name = "VALUE_UNIT", length = 25)
     private String valueUnit;
 
-    // [FIX] Corrected column name typo from IS_PAET to IS_PARENT for clarity.
     @Column(name = "IS_PARENT")
     private boolean parent;
 

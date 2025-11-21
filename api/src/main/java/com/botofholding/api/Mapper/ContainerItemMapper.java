@@ -2,36 +2,64 @@ package com.botofholding.api.Mapper;
 
 import com.botofholding.contract.DTO.Response.AutoCompleteDto;
 import com.botofholding.contract.DTO.Response.ContainerItemSummaryDto;
+import com.botofholding.contract.DTO.Response.AutoCompleteProjection;
 import com.botofholding.api.Domain.Entity.ContainerItem;
 import org.mapstruct.Mapper;
+import org.mapstruct.IterableMapping;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 import org.mapstruct.ReportingPolicy;
 
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface ContainerItemMapper {
 
+    /**
+     * The primary mapping method for a ContainerItem, including one level of its children.
+     * This method is named so it can be explicitly used by collection mappers.
+     */
+    @Named("summary")
     @Mapping(source = "containerItemId", target = "containerItemId")
     @Mapping(source = "item.itemId", target = "itemId")
     @Mapping(source = "item.itemName", target = "itemName")
     @Mapping(source = "quantity", target = "quantity")
     @Mapping(source = "userNote", target = "userNote")
     @Mapping(source = "lastModifiedDateTime", target = "lastModified")
-    @Mapping(source = "children", target = "children")
+    @Mapping(source = "parent.containerItemId", target = "parentId")
+    @Mapping(source = "containerItem", target = "path", qualifiedByName = "mapItemPath")
     ContainerItemSummaryDto toSummaryDto(ContainerItem containerItem);
 
-    @Mapping(source = "containerItem", target = "label", qualifiedByName = "mapItemName")
+    @Mapping(source = "containerItem", target = "label", qualifiedByName = "mapItemPath")
     @Mapping(source = "containerItemId", target = "id")
     @Mapping(source = "containerItem", target = "description", qualifiedByName = "mapDescription")
     AutoCompleteDto toAutoCompleteDto(ContainerItem containerItem);
 
+    /**
+     * Maps a collection of ContainerItems using the full "summary" method for each item.
+     * This is used by ContainerMapper to map the top-level items in a container.
+     */
+    @Named("toSummaryDtoList")
+    @IterableMapping(qualifiedByName = "summary")
+    List<ContainerItemSummaryDto> toSummaryDtoList(Set<ContainerItem> containerItems);
 
-    @Named("mapItemName")
-    default String mapItemName(ContainerItem containerItem) {
+    AutoCompleteDto toAutoCompleteDto(AutoCompleteProjection projection);
+
+    @Named("mapItemPath")
+    default String mapItemPath(ContainerItem containerItem) {
         if (containerItem == null) {
             return ""; // Or some default like "N/A"
         }
-        return buildRecursiveItemName(containerItem);
+        // [IMPROVEMENT] Use an iterative approach to prevent potential StackOverflowError on deep hierarchies.
+        LinkedList<String> path = new LinkedList<>();
+        ContainerItem current = containerItem;
+        while (current != null) {
+            path.addFirst(current.getItem() != null ? current.getItem().getItemName() : "Unnamed Item");
+            current = current.getParent();
+        }
+        return String.join(" > ", path);
     }
 
     /**
@@ -58,19 +86,5 @@ public interface ContainerItemMapper {
             description.append(note);
         }
         return description.toString();
-    }
-    /**
-     * Recursively builds the full path of an item, including its parents.
-     * e.g., "Backpack > Potion Pouch > Health Potion"
-     * @param item The item to build the name for.
-     * @return The full, nested item name.
- */
-    default String buildRecursiveItemName(ContainerItem item) {
-        // Base case: The item has no parent, so just return its name.
-        if (item.getParent() == null) {
-            return item.getItem() != null ? item.getItem().getItemName() : "Unnamed Item";
-        }
-        // Recursive step: Get the parent's full name, then append this item's name.
-        return buildRecursiveItemName(item.getParent()) + " > " + (item.getItem() != null ? item.getItem().getItemName() : "Unnamed Item");
     }
 }

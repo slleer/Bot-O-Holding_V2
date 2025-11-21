@@ -7,6 +7,7 @@ import com.botofholding.bot.Exception.ApiException;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.env.Environment;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.*;
@@ -15,6 +16,7 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -23,23 +25,40 @@ public class ApiClientImpl implements ApiClient {
 
     private static final Logger logger = LoggerFactory.getLogger(ApiClientImpl.class);
     private final WebClient webClient;
+    private final Environment environment;
     private volatile String botAuthToken; // Store the token here
 
-    public ApiClientImpl(WebClient.Builder webClientBuilder, @Value("${api.base-url}") String baseUrl) {
+    public ApiClientImpl(WebClient.Builder webClientBuilder, @Value("${api.base-url}") String baseUrl, Environment environment) {
         // This WebClient is now perfectly configured with both authentication and impersonation.
         this.webClient = webClientBuilder
                 .baseUrl(baseUrl)
                 .filter(addAuthorizationHeader())
                 .filter(addImpersonationHeaders())
                 .build();
+        this.environment = environment;
     }
 
     /**
      * This method is called by Spring after the bean is constructed.
-     * It's the perfect place to fetch the initial token.
+     * It programmatically checks the active profile to decide whether to fetch
+     * a real token or use a dummy one for tests. This is the robust way to
+     * handle environment-specific initialization.
      */
     @PostConstruct
-    public void initializeToken() {
+    public void initialize() {
+        if (Arrays.asList(environment.getActiveProfiles()).contains("test")) {
+            logger.info("Skipping real token fetch. Using dummy API token for test profile.");
+            initializeTokenForTest();
+        } else {
+            logger.info("Fetching real API token.");
+            initializeToken();
+        }
+    }
+
+    /**
+     * Fetches the initial token for production/dev environments.
+     */
+    private void initializeToken() {
         this.webClient.get()
                 .uri("/auth/bot-token")
                 .retrieve()
@@ -51,6 +70,13 @@ public class ApiClientImpl implements ApiClient {
                 })
                 .doOnError(error -> logger.error("FATAL: Could not fetch API token for bot.", error))
                 .block(); // Use .block() here because the bot cannot function without the token.
+    }
+
+    /**
+     * A test-only initializer that sets a dummy token.
+     */
+    private void initializeTokenForTest() {
+        this.botAuthToken = "dummy-test-token";
     }
 
     /**

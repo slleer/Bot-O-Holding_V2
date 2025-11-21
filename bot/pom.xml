@@ -20,6 +20,10 @@
 			<groupId>com.botofholding</groupId>
 			<artifactId>contract</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>com.botofholding</groupId>
+			<artifactId>shared-config</artifactId>
+		</dependency>
 
 		<!-- Spring Boot Starters (versions and logging exclusions managed by parent) -->
 		<dependency>

@@ -18,7 +18,7 @@ import java.time.LocalDateTime;
 @PrimaryKeyJoinColumn(name = "GUILD_ID")
 public class Guild extends Owner {
 
-    @Column(name = "GUILD_NME")
+    @Column(name = "GUILD_NME", length = 75)
     private String guildName;
 
 

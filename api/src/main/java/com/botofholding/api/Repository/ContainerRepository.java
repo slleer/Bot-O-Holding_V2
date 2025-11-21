@@ -54,13 +54,19 @@ public interface ContainerRepository extends JpaRepository<Container, Long> {
     Optional<Container> findByOwnerAndContainerName(Owner principal, String name);
 
     /**
-     * Finds the active container for a given user and eagerly fetches its items and their
-     * master item data in a single, efficient query.
+     * Finds the active container for a user and eagerly fetches the *entire*
+     * object graph in a single, efficient query. This includes the container's items,
+     * the children of those items, and all associated master item data.
+     * Using `Set` in the entities makes this multi-level fetch possible without errors.
+     *
      * @param user The user whose active container is to be found.
      * @return An Optional containing the active Container, or empty if none is set.
      */
-    @Query("SELECT DISTINCT pc FROM BohUser u JOIN u.primaryContainer pc LEFT JOIN FETCH pc.containerItems ci LEFT JOIN FETCH ci.item i WHERE u = :user")
-    Optional<Container> findActiveContainerWithItemsForUser(@Param("user") BohUser user);
+    @Query("SELECT DISTINCT pc FROM BohUser u JOIN u.primaryContainer pc " +
+           "LEFT JOIN FETCH pc.containerItems ci LEFT JOIN FETCH ci.item i " +
+           "LEFT JOIN FETCH ci.children c_child LEFT JOIN FETCH c_child.item c_item " +
+           "WHERE u = :user")
+    Optional<Container> findActiveContainerWithFullHierarchyForUser(@Param("user") BohUser user);
 
     /**
      * Finds the active container for a given user.

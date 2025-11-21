@@ -15,6 +15,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Profile;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -31,6 +32,7 @@ import java.util.stream.Collectors;
  * This component runs after the {@link SystemOwnerDataInitializer} due to its {@code @Order(2)}.
  */
 @Component
+@Profile("!test") // [FIX] Do not run this initializer when the 'test' profile is active.
 @Order(2)
 public class ItemDataInitializer implements CommandLineRunner {
 
