@@ -1,0 +1,19 @@
+{
+  "name": "item",
+  "description": "Commands for managing items",
+  "options": [
+    {
+      "name": "find",
+      "description": "Find an item in your character's inventory or the world",
+      "type": 1,
+      "options": [
+        {
+          "name": "name",
+          "description": "Name of the item",
+          "type": 3,
+          "autocomplete": true
+        }
+      ]
+    }
+  ]
+}

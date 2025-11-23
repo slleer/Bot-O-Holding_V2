@@ -1,0 +1,117 @@
+{
+  "name": "character",
+  "description": "character commands",
+  "options": [
+    {
+      "name": "new",
+      "description": "Create a new character",
+      "type": 1,
+      "options": [
+        {
+          "name": "name",
+          "description": "Name of the character. EX: Stant's 7-sided box.",
+          "type": 3,
+          "required": true
+        },
+        {
+          "name": "description",
+          "description": "Description of the character.",
+          "type": 3
+        },
+        {
+          "name": "type",
+          "description": "What kind of character. EX: 'D&D 5e'",
+          "type": 3
+        },
+        {
+          "name": "campaign-owned",
+          "description": "if true, character will be owned by the campaign and available to all members",
+          "type": 3,
+          "choices": [
+            {
+              "name": "true",
+              "value": "true"
+            }
+          ]
+        },
+        {
+          "name": "set-as-active",
+          "description": "Set this character as active",
+          "type": 3,
+          "choices": [
+            {
+              "name": "true",
+              "value": "true"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "find",
+      "description": "Find character",
+      "type": 1,
+      "options": [
+        {
+          "name": "name",
+          "description": "Name of the character. EX: Stant's 7-sided box. Returns all characters for user if blank",
+          "type": 3,
+          "autocomplete": true
+        }
+      ]
+    },
+    {
+      "name": "find-active",
+      "description": "Returns this user's active character",
+      "type": 1
+    },
+    {
+      "name": "set-active",
+      "description": "Set this character as active",
+      "type": 1,
+      "options": [
+        {
+          "name": "name",
+          "description": "Name of the character. EX: Stant's 7-sided box.",
+          "type": 3,
+          "required": true,
+          "autocomplete": true
+        },
+        {
+          "name": "prioritize",
+          "description": "Choose which to prioritize in the event of a collision. Use if autocomplete fails.",
+          "type": 3,
+          "choices": [
+            {
+              "name": "Campaign Owned",
+              "value": "GUILD"
+            },
+            {
+              "name": "Player Owned",
+              "value": "USER"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "delete",
+      "description": "Delete a character",
+      "type": 1,
+      "options": [
+        {
+          "name": "name",
+          "description": "Name of the character to delete",
+          "type": 3,
+          "required": true
+        },
+        {
+          "name": "id",
+          "description": "The id of the character to delete",
+          "type": 4,
+          "required": true
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "name": "player",
+  "description": "Player commands",
+  "options": [
+    {
+      "name": "update",
+      "description": "Update player details",
+      "type": 1
+    },
+    {
+      "name": "get",
+      "description": "Get player details",
+      "type": 1
+    },
+    {
+      "name": "settings",
+      "description": "Get or update Player settings, blank fields will be ignored",
+      "type": 1,
+      "options": [
+        {
+          "name": "hide-character",
+          "description": "If false, character commands will be visible to the server. Otherwise, only you can see them.",
+          "type": 5
+        },
+        {
+          "name": "hide-player",
+          "description": "If false, player commands will be visible to the server. Otherwise, only you can see them.",
+          "type": 5
+        },
+        {
+          "name": "hide-item",
+          "description": "If false, item commands will be visible to the server. Otherwise, only you can see them.",
+          "type": 5
+        }
+      ]
+    }
+  ]
+}
