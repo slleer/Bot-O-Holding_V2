@@ -1,18 +1,19 @@
 package com.botofholding.bot.SlashCommands.Parsers.Inventory;
 
+import com.botofholding.bot.Config.CommandConfig;
 import com.botofholding.contract.DTO.Request.ModifyItemRequestDto;
 import com.botofholding.bot.Domain.Entities.AutocompleteSelection;
 import com.botofholding.bot.Domain.Entities.Reply;
 import com.botofholding.bot.Service.ApiClient;
 import com.botofholding.bot.SlashCommands.Parsers.InventoryParser;
 import com.botofholding.bot.SlashCommands.Parsers.RequestBodyParser;
-import com.botofholding.bot.Utility.CommandConstants;
 import com.botofholding.bot.Utility.EventUtility;
 import com.botofholding.bot.Utility.MessageFormatter;
 import com.botofholding.bot.Utility.ReplyUtility;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
@@ -22,15 +23,21 @@ import java.util.Optional;
 public class ModifyInventoryParser implements InventoryParser, RequestBodyParser<ModifyItemRequestDto> {
 
     private static final Logger logger = LoggerFactory.getLogger(ModifyInventoryParser.class);
+    private final CommandConfig commandConfig;
+
+    @Autowired
+    public ModifyInventoryParser(CommandConfig commandConfig) {
+        this.commandConfig = commandConfig;
+    }
 
     @Override
     public String getSubCommandName() {
-        return CommandConstants.SUBCMD_INVENTORY_MODIFY;
+        return commandConfig.getSubcmdInventoryModify();
     }
 
     @Override
     public String getContext() {
-        return CommandConstants.CONTEXT_INVENTORY_MODIFY;
+        return commandConfig.getContextInventoryModify();
     }
 
     @Override
@@ -54,12 +61,10 @@ public class ModifyInventoryParser implements InventoryParser, RequestBodyParser
 
     @Override
     public Mono<ModifyItemRequestDto> buildRequestDto(ChatInputInteractionEvent event) {
-        Mono<AutocompleteSelection> selectionMono = EventUtility.getAutocompleteSelection(event, getSubCommandName(), CommandConstants.OPTION_ITEM);
-        Mono<Optional<String>> noteMono = EventUtility.getOptionValueAsString(event, getSubCommandName(), CommandConstants.OPTION_NOTE).map(Optional::of);
-//        Mono<Optional<Integer>> quantityMono = EventUtility.getOptionValueAsLong(event, getSubCommandName(), CommandConstants.OPTION_QUANTITY)
-//                .map(Long::intValue).map(Optional::of);
-        Mono<Boolean> moveToRootMono = Mono.just(EventUtility.getOptionValue(event, getSubCommandName(), CommandConstants.OPTION_INVENTORY_MODIFY_MOVE_TO_ROOT).isPresent());
-        Mono<AutocompleteSelection> moveInsideMono = EventUtility.getAutocompleteSelection(event, getSubCommandName(), CommandConstants.OPTION_INVENTORY_MODIFY_MOVE_INSIDE)
+        Mono<AutocompleteSelection> selectionMono = EventUtility.getAutocompleteSelection(event, getSubCommandName(), commandConfig.getOptionItem());
+        Mono<Optional<String>> noteMono = EventUtility.getOptionValueAsString(event, getSubCommandName(), commandConfig.getOptionNote()).map(Optional::of);
+        Mono<Boolean> moveToRootMono = Mono.just(EventUtility.getOptionValue(event, getSubCommandName(), commandConfig.getOptionInventoryModifyMoveToRoot()).isPresent());
+        Mono<AutocompleteSelection> moveInsideMono = EventUtility.getAutocompleteSelection(event, getSubCommandName(), commandConfig.getOptionInventoryModifyMoveInside())
                 .defaultIfEmpty(new AutocompleteSelection("", null));
 
         return Mono.zip(selectionMono, noteMono, moveToRootMono, moveInsideMono)

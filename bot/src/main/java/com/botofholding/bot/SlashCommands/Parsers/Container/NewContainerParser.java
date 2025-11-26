@@ -1,5 +1,6 @@
 package com.botofholding.bot.SlashCommands.Parsers.Container;
 
+import com.botofholding.bot.Config.CommandConfig;
 import com.botofholding.contract.DTO.Request.ContainerRequestDto;
 import com.botofholding.contract.DTO.Response.ContainerSummaryDto;
 import com.botofholding.bot.Domain.Entities.TargetOwner;
@@ -18,15 +19,20 @@ import reactor.util.function.Tuples;
 public class NewContainerParser implements ContainerParser, RequestBodyParser<ContainerRequestDto> {
 
     private static final Logger logger = LoggerFactory.getLogger(NewContainerParser.class);
+    private final CommandConfig commandConfig;
+
+    public NewContainerParser(CommandConfig commandConfig) {
+        this.commandConfig = commandConfig;
+    }
 
     @Override
     public String getSubCommandName() {
-        return CommandConstants.SUBCMD_CONTAINER_ADD;
+        return commandConfig.getSubcmdContainerAdd();
     }
 
     @Override
     public String getContext() {
-        return CommandConstants.CONTEXT_CONTAINER_ADD;
+        return commandConfig.getContextContainerAdd();
     }
 
     @Override
@@ -35,7 +41,7 @@ public class NewContainerParser implements ContainerParser, RequestBodyParser<Co
 
         // 1. Determine the target owner (user or guild) based on the 'server-owned' option.
         OwnerTypeExtractor extractor = EventUtility::getOwnerTypeFromSingleChoice;
-        Mono<TargetOwner> targetOwnerMono = EventUtility.determineTargetOwner(event, getSubCommandName(), CommandConstants.OPTION_SERVER_OWNED, extractor);
+        Mono<TargetOwner> targetOwnerMono = EventUtility.determineTargetOwner(event, getSubCommandName(), commandConfig.getOptionServerOwned(), extractor);
 
         // 2. Determine if the reply should be ephemeral. Guild-owned is always public.
         Mono<Boolean> useEphemeralMono = targetOwnerMono.flatMap(target -> {
@@ -71,17 +77,17 @@ public class NewContainerParser implements ContainerParser, RequestBodyParser<Co
         String subcommandName = getSubCommandName();
 
         // A required option that errors if not present. This is perfect.
-        Mono<String> nameMono = EventUtility.getOptionValueAsString(event, subcommandName, CommandConstants.OPTION_NAME)
+        Mono<String> nameMono = EventUtility.getOptionValueAsString(event, subcommandName, commandConfig.getOptionName())
                 .switchIfEmpty(Mono.error(new IllegalArgumentException("Container 'name' is a required option.")));
 
         // This is a robust, explicit, and proven solution for your stream.
-        Mono<String> descriptionMono = EventUtility.getOptionValueAsString(event, subcommandName, CommandConstants.OPTION_DESCRIPTION)
+        Mono<String> descriptionMono = EventUtility.getOptionValueAsString(event, subcommandName, commandConfig.getOptionDescription())
                 .defaultIfEmpty("");
 
-        Mono<String> typeMono = EventUtility.getOptionValueAsString(event, subcommandName, CommandConstants.OPTION_TYPE)
+        Mono<String> typeMono = EventUtility.getOptionValueAsString(event, subcommandName, commandConfig.getOptionType())
                 .defaultIfEmpty("");
 
-        Mono<Boolean> activeMono = Mono.just(EventUtility.getOptionValue(event, subcommandName, CommandConstants.OPTION_CONTAINER_ADD_SET_AS_ACTIVE).isPresent());
+        Mono<Boolean> activeMono = Mono.just(EventUtility.getOptionValue(event, subcommandName, commandConfig.getOptionContainerAddSetAsActive()).isPresent());
 
         return Mono.zip(nameMono, descriptionMono, typeMono, activeMono)
                 .map(tuple -> {
@@ -95,4 +101,3 @@ public class NewContainerParser implements ContainerParser, RequestBodyParser<Co
                 });
     }
 }
-

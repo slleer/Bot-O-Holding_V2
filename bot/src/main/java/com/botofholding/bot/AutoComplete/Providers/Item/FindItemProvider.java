@@ -2,8 +2,8 @@ package com.botofholding.bot.AutoComplete.Providers.Item;
 
 import com.botofholding.bot.AutoComplete.Providers.AbstractItemNameProvider;
 import com.botofholding.bot.AutoComplete.Providers.ItemProvider;
+import com.botofholding.bot.Config.CommandConfig;
 import com.botofholding.bot.Service.ApiClient;
-import com.botofholding.bot.Utility.CommandConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -11,18 +11,18 @@ import org.springframework.stereotype.Component;
 public class FindItemProvider extends AbstractItemNameProvider implements ItemProvider {
 
     @Autowired
-    public FindItemProvider(ApiClient apiClient) {
-        super(apiClient);
+    public FindItemProvider(ApiClient apiClient, CommandConfig commandConfig) {
+        super(apiClient ,commandConfig);
     }
 
     @Override
     public String getOptionName() {
-        return CommandConstants.OPTION_NAME;
+        return commandConfig.getOptionName();
     }
 
     @Override
     public String getSubCommandName() {
-        return CommandConstants.SUBCMD_ITEM_FIND;
+        return commandConfig.getSubcmdItemFind();
     }
 
 }

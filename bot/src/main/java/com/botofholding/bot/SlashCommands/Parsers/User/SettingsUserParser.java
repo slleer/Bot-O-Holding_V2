@@ -1,10 +1,10 @@
 package com.botofholding.bot.SlashCommands.Parsers.User;
 
+import com.botofholding.bot.Config.CommandConfig;
 import com.botofholding.contract.DTO.Request.UserSettingsUpdateRequestDto;
 import com.botofholding.bot.SlashCommands.Parsers.RequestBodyParser;
 import com.botofholding.bot.Service.ApiClient;
 import com.botofholding.bot.SlashCommands.Parsers.UserParser;
-import com.botofholding.bot.Utility.CommandConstants;
 import com.botofholding.bot.Utility.EventUtility;
 import com.botofholding.bot.Utility.MessageFormatter;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
@@ -19,15 +19,20 @@ import java.util.Optional;
 public class SettingsUserParser implements UserParser, RequestBodyParser<UserSettingsUpdateRequestDto> {
 
     private final static Logger logger = LoggerFactory.getLogger(SettingsUserParser.class);
+    private final CommandConfig commandConfig;
+
+    public SettingsUserParser(CommandConfig commandConfig) {
+        this.commandConfig = commandConfig;
+    }
 
     @Override
     public String getSubCommandName() {
-        return CommandConstants.SUBCMD_USER_SETTINGS;
+        return commandConfig.getSubcmdUserSettings();
     }
 
     @Override
     public String getContext() {
-        return CommandConstants.CONTEXT_USER_SETTINGS;
+        return commandConfig.getContextUserSettings();
     }
 
     @Override
@@ -47,11 +52,11 @@ public class SettingsUserParser implements UserParser, RequestBodyParser<UserSet
     public Mono<UserSettingsUpdateRequestDto> buildRequestDto(ChatInputInteractionEvent event) {
 
         Mono<Optional<Boolean>> ephemeralContainerMono
-                = getOptionalSetting(event, CommandConstants.OPTION_USER_SETTINGS_HIDE_CONTAINER);
+                = getOptionalSetting(event, commandConfig.getOptionUserSettingsHideContainer());
         Mono<Optional<Boolean>> ephemeralUserMono
-                = getOptionalSetting(event, CommandConstants.OPTION_USER_SETTINGS_HIDE_USER);
+                = getOptionalSetting(event, commandConfig.getOptionUserSettingsHideUser());
         Mono<Optional<Boolean>> ephemeralItemMono
-                = getOptionalSetting(event, CommandConstants.OPTION_USER_SETTINGS_HIDE_ITEM);
+                = getOptionalSetting(event, commandConfig.getOptionUserSettingsHideItem());
 
         return Mono.zip(ephemeralContainerMono, ephemeralUserMono, ephemeralItemMono)
                 .map(tuple -> {

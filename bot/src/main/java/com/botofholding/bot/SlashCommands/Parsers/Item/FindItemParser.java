@@ -1,16 +1,17 @@
 package com.botofholding.bot.SlashCommands.Parsers.Item;
 
+import com.botofholding.bot.Config.CommandConfig;
 import com.botofholding.bot.Domain.Entities.OwnerContext;
 import com.botofholding.bot.Domain.Entities.Reply;
 import com.botofholding.bot.Exception.ReplyException;
 import com.botofholding.bot.SlashCommands.Parsers.ByNameParser;
 import com.botofholding.bot.Service.ApiClient;
 import com.botofholding.bot.SlashCommands.Parsers.ItemParser;
-import com.botofholding.bot.Utility.CommandConstants;
 import com.botofholding.bot.Utility.MessageFormatter;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
@@ -18,15 +19,26 @@ import reactor.core.publisher.Mono;
 public class FindItemParser implements ItemParser, ByNameParser {
 
     private static final Logger logger = LoggerFactory.getLogger(FindItemParser.class);
+    private final CommandConfig commandConfig;
+
+    @Autowired
+    public FindItemParser(CommandConfig commandConfig) {
+        this.commandConfig = commandConfig;
+    }
+
+    @Override
+    public CommandConfig getCommandConfig() {
+        return commandConfig;
+    }
 
     @Override
     public String getSubCommandName() {
-        return CommandConstants.SUBCMD_ITEM_FIND;
+        return commandConfig.getSubcmdItemFind();
     }
 
     @Override
     public String getContext() {
-        return CommandConstants.CONTEXT_ITEM_FIND;
+        return commandConfig.getContextItemFind();
     }
 
     @Override
@@ -43,7 +55,7 @@ public class FindItemParser implements ItemParser, ByNameParser {
     public Mono<Reply> fetchByNameAndFormat(ChatInputInteractionEvent event, String objectName, ApiClient apiClient, Mono<OwnerContext> ownerContextMono) {
         logger.debug("Manual input detected. Searching for item by name: {}", objectName);
         return ownerContextMono.flatMap(owner ->
-                apiClient.findItems(objectName, owner.ownerId(), owner.ownerType(), owner.ownerName())
+                apiClient.findItems(objectName, owner.ownerId(), owner.ownerType(),owner.ownerName())
                         .map(itemList -> {
                             if (itemList.isEmpty()) {
                                 throw new ReplyException("Could not find an item with that name.");

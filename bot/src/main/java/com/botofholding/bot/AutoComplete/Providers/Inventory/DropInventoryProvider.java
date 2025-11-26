@@ -9,7 +9,6 @@ import org.springframework.stereotype.Component;
 @Component
 public class DropInventoryProvider extends AbstractActiveItemNameProvider implements InventoryProvider {
 
-
     public DropInventoryProvider(ApiClient apiClient, CommandConfig commandConfig) {
         super(apiClient, commandConfig);
     }

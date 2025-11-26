@@ -14,7 +14,7 @@
     },
     {
       "name": "settings",
-      "description": "Get or update Player settings, blank fields will be ignored",
+      "description": "Get or update Player settings, blank fields will be ignored. Server owned objects are always visible.",
       "type": 1,
       "options": [
         {

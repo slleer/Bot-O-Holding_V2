@@ -1,16 +1,17 @@
 package com.botofholding.bot.SlashCommands.Parsers.User;
 
 
+import com.botofholding.bot.Config.CommandConfig;
 import com.botofholding.contract.DTO.Request.UserRequestDto;
 import com.botofholding.bot.SlashCommands.Parsers.RequestBodyParser;
 import com.botofholding.bot.Service.ApiClient;
 import com.botofholding.bot.SlashCommands.Parsers.UserParser;
-import com.botofholding.bot.Utility.CommandConstants;
 import com.botofholding.bot.Utility.EventUtility;
 import com.botofholding.bot.Utility.MessageFormatter;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
@@ -21,15 +22,21 @@ import java.util.Optional;
 public class UpdateUserParser implements UserParser, RequestBodyParser<UserRequestDto> {
 
     private static final Logger logger = LoggerFactory.getLogger(UpdateUserParser.class);
+    private final CommandConfig commandConfig;
+
+    @Autowired
+    public UpdateUserParser(CommandConfig commandConfig) {
+        this.commandConfig = commandConfig;
+    }
 
     @Override
     public String getSubCommandName() {
-        return CommandConstants.SUBCMD_USER_UPDATE;
+        return commandConfig.getSubcmdUserUpdate();
     }
 
     @Override
     public String getContext() {
-        return CommandConstants.CONTEXT_USER_UPDATE;
+        return commandConfig.getContextUserUpdate();
     }
 
     @Override

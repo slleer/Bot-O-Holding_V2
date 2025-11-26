@@ -1,10 +1,9 @@
 package com.botofholding.bot.SlashCommands.Parsers;
 
+import com.botofholding.bot.Config.CommandConfig;
 import com.botofholding.bot.Domain.Entities.OwnerContext;
 import com.botofholding.bot.Domain.Entities.Reply;
-import com.botofholding.bot.Domain.Entities.TargetOwner;
 import com.botofholding.bot.Service.ApiClient;
-import com.botofholding.bot.Utility.CommandConstants;
 import com.botofholding.bot.Utility.EventUtility;
 import com.botofholding.bot.Utility.ReplyUtility;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
@@ -12,6 +11,9 @@ import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 
 public interface ByNameParser extends Parser, OwnerContextProvider {
+
+    // Abstract method to be implemented by concrete classes
+    CommandConfig getCommandConfig();
 
     @Override
     default Mono<Void> execute(ChatInputInteractionEvent event, ApiClient apiClient) {
@@ -21,7 +23,7 @@ public interface ByNameParser extends Parser, OwnerContextProvider {
         //1. Build the context ONCE. This holds the ephemeral setting.
         Mono<OwnerContext> ownerContextMono = getOwnerContext(event, apiClient);
         // 2. Get the required 'name' option from the command.
-        Mono<String> nameOptionMono = EventUtility.getOptionValueAsString(event, getSubCommandName(), CommandConstants.OPTION_NAME)
+        Mono<String> nameOptionMono = EventUtility.getOptionValueAsString(event, getSubCommandName(), getCommandConfig().getOptionName())
                 .defaultIfEmpty("");
         // 3. The main reactive chain, which produces a final Reply object.
         Mono<Reply> replyMono = nameOptionMono

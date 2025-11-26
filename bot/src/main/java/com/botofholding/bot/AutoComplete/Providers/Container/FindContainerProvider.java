@@ -2,8 +2,8 @@ package com.botofholding.bot.AutoComplete.Providers.Container;
 
 import com.botofholding.bot.AutoComplete.Providers.AbstractContainerNameProvider;
 import com.botofholding.bot.AutoComplete.Providers.ContainerProvider;
+import com.botofholding.bot.Config.CommandConfig;
 import com.botofholding.bot.Service.ApiClient;
-import com.botofholding.bot.Utility.CommandConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -11,12 +11,12 @@ import org.springframework.stereotype.Component;
 public class FindContainerProvider extends AbstractContainerNameProvider implements ContainerProvider {
 
     @Autowired
-    public FindContainerProvider(ApiClient apiClient) {
-        super(apiClient);
+    public FindContainerProvider(ApiClient apiClient, CommandConfig commandConfig) {
+        super(apiClient ,commandConfig);
     }
 
     @Override
     public String getSubCommandName() {
-        return CommandConstants.SUBCMD_CONTAINER_FIND;
+        return commandConfig.getSubcmdContainerFind();
     }
 }

@@ -1,5 +1,6 @@
 package com.botofholding.bot.SlashCommands.Parsers.Inventory;
 
+import com.botofholding.bot.Config.CommandConfig;
 import com.botofholding.contract.DTO.Request.AddItemRequestDto;
 import com.botofholding.bot.Domain.Entities.AutocompleteSelection;
 import com.botofholding.bot.Domain.Entities.Reply;
@@ -7,13 +8,13 @@ import com.botofholding.bot.Domain.Entities.TargetOwner;
 import com.botofholding.bot.Service.ApiClient;
 import com.botofholding.bot.SlashCommands.Parsers.InventoryParser;
 import com.botofholding.bot.SlashCommands.Parsers.RequestBodyParser;
-import com.botofholding.bot.Utility.CommandConstants;
 import com.botofholding.bot.Utility.EventUtility;
 import com.botofholding.bot.Utility.MessageFormatter;
 import com.botofholding.bot.Utility.ReplyUtility;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
@@ -21,15 +22,21 @@ import reactor.core.publisher.Mono;
 public class AddInventoryParser implements InventoryParser, RequestBodyParser<AddItemRequestDto> {
 
     private static final Logger logger = LoggerFactory.getLogger(AddInventoryParser.class);
+    private final CommandConfig commandConfig;
+
+    @Autowired
+    public AddInventoryParser(CommandConfig commandConfig) {
+        this.commandConfig = commandConfig;
+    }
 
     @Override
     public String getSubCommandName() {
-        return CommandConstants.SUBCMD_INVENTORY_ADD;
+        return commandConfig.getSubcmdInventoryAdd();
     }
 
     @Override
     public String getContext() {
-        return CommandConstants.CONTEXT_INVENTORY_ADD;
+        return commandConfig.getContextInventoryAdd();
     }
 
     @Override
@@ -64,17 +71,17 @@ public class AddInventoryParser implements InventoryParser, RequestBodyParser<Ad
     @Override
     public Mono<AddItemRequestDto> buildRequestDto(ChatInputInteractionEvent event) {
         // Use the new, centralized utility method to get the item selection.
-        Mono<AutocompleteSelection> selectionMono = EventUtility.getAutocompleteSelection(event, getSubCommandName(), CommandConstants.OPTION_ITEM);
+        Mono<AutocompleteSelection> selectionMono = EventUtility.getAutocompleteSelection(event, getSubCommandName(), commandConfig.getOptionItem());
 
         // (optional) Item to put added item inside, such as containers
-        Mono<AutocompleteSelection> insideMono = EventUtility.getAutocompleteSelection(event, getSubCommandName(), CommandConstants.OPTION_INVENTORY_ADD_PARENT)
+        Mono<AutocompleteSelection> insideMono = EventUtility.getAutocompleteSelection(event, getSubCommandName(), commandConfig.getOptionInventoryAddParent())
                 .defaultIfEmpty(new AutocompleteSelection("", null));
 
-        Mono<Integer> quantityMono = EventUtility.getOptionValueAsLong(event, getSubCommandName(), CommandConstants.OPTION_QUANTITY)
+        Mono<Integer> quantityMono = EventUtility.getOptionValueAsLong(event, getSubCommandName(), commandConfig.getOptionQuantity())
                 .map(Long::intValue)
                 .defaultIfEmpty(1);
 
-        Mono<String> noteMono = EventUtility.getOptionValueAsString(event, getSubCommandName(), CommandConstants.OPTION_NOTE).defaultIfEmpty("");
+        Mono<String> noteMono = EventUtility.getOptionValueAsString(event, getSubCommandName(), commandConfig.getOptionNote()).defaultIfEmpty("");
 
         logger.info("About to finish the buildRequestDto method");
         return Mono.zip(selectionMono, quantityMono, noteMono, insideMono)

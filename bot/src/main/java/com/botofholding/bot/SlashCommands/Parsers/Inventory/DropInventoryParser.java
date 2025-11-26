@@ -1,10 +1,10 @@
 package com.botofholding.bot.SlashCommands.Parsers.Inventory;
 
+import com.botofholding.bot.Config.CommandConfig;
 import com.botofholding.bot.Domain.Entities.AutocompleteSelection;
 import com.botofholding.bot.Domain.Entities.Reply;
 import com.botofholding.bot.Service.ApiClient;
 import com.botofholding.bot.SlashCommands.Parsers.InventoryParser;
-import com.botofholding.bot.Utility.CommandConstants;
 import com.botofholding.bot.Utility.EventUtility;
 import com.botofholding.bot.Utility.MessageFormatter;
 import com.botofholding.bot.Utility.ReplyUtility;
@@ -18,29 +18,34 @@ import reactor.core.publisher.Mono;
 public class DropInventoryParser implements InventoryParser {
 
     private static final Logger logger = LoggerFactory.getLogger(DropInventoryParser.class);
+    private final CommandConfig commandConfig;
+
+    public DropInventoryParser(CommandConfig commandConfig) {
+        this.commandConfig = commandConfig;
+    }
 
     @Override
     public String getSubCommandName() {
-        return CommandConstants.SUBCMD_INVENTORY_DROP;
+        return commandConfig.getSubcmdInventoryDrop();
     }
 
     @Override
     public String getContext() {
-        return CommandConstants.CONTEXT_INVENTORY_DROP;
+        return commandConfig.getContextInventoryDrop();
     }
 
     @Override
     public Mono<Void> execute(ChatInputInteractionEvent event, ApiClient apiClient) {
         logger.info("Attempting to drop item from active container");
         // 1. Get the item selection using our new centralized utility method.
-        Mono<AutocompleteSelection> selectionMono = EventUtility.getAutocompleteSelection(event, getSubCommandName(), CommandConstants.OPTION_ITEM);
+        Mono<AutocompleteSelection> selectionMono = EventUtility.getAutocompleteSelection(event, getSubCommandName(), commandConfig.getOptionItem());
 
         // 2. Get the quantity to drop, defaulting to 1.
-        Mono<Integer> quantityMono = EventUtility.getOptionValueAsLong(event, getSubCommandName(), CommandConstants.OPTION_QUANTITY)
+        Mono<Integer> quantityMono = EventUtility.getOptionValueAsLong(event, getSubCommandName(), commandConfig.getOptionQuantity())
                 .map(Long::intValue)
                 .defaultIfEmpty(1);
 
-        Mono<Boolean> dropChildrenMono = Mono.just(EventUtility.getOptionValue(event, getSubCommandName(), CommandConstants.OPTION_INVENTORY_DROP_DROP_CHILDREN).isPresent());
+        Mono<Boolean> dropChildrenMono = Mono.just(EventUtility.getOptionValue(event, getSubCommandName(), commandConfig.getOptionInventoryDropDropChildren()).isPresent());
 
         // 4. Get the user's ephemeral setting for replies.
         Mono<Boolean> ephemeralMono = getEphemeralSetting(apiClient);

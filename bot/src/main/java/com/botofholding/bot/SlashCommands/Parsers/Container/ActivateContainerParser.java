@@ -1,17 +1,18 @@
 package com.botofholding.bot.SlashCommands.Parsers.Container;
 
+import com.botofholding.bot.Config.CommandConfig;
 import com.botofholding.contract.DTO.Response.ContainerSummaryDto;
 import com.botofholding.bot.Domain.Entities.OwnerContext;
 import com.botofholding.bot.Domain.Entities.Reply;
 import com.botofholding.bot.SlashCommands.Parsers.ByNameParser;
 import com.botofholding.bot.Service.ApiClient;
 import com.botofholding.bot.SlashCommands.Parsers.ContainerParser;
-import com.botofholding.bot.Utility.CommandConstants;
 import com.botofholding.bot.Utility.EventUtility;
 import com.botofholding.bot.Utility.MessageFormatter;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
@@ -21,15 +22,26 @@ import java.util.List;
 public class ActivateContainerParser implements ContainerParser, ByNameParser {
 
     private static final Logger logger = LoggerFactory.getLogger(ActivateContainerParser.class);
+    private final CommandConfig commandConfig;
+
+    @Autowired
+    public ActivateContainerParser(CommandConfig commandConfig) {
+        this.commandConfig = commandConfig;
+    }
+
+    @Override
+    public CommandConfig getCommandConfig() {
+        return commandConfig;
+    }
 
     @Override
     public String getSubCommandName() {
-        return CommandConstants.SUBCMD_CONTAINER_ACTIVATE;
+        return commandConfig.getSubcmdContainerActivate();
     }
 
     @Override
     public String getContext() {
-        return CommandConstants.CONTEXT_CONTAINER_ACTIVATE;
+        return commandConfig.getContextContainerActivate();
     }
 
     // TODO rewrite this to use a single api call with id being a nullable parameter.
@@ -50,7 +62,7 @@ public class ActivateContainerParser implements ContainerParser, ByNameParser {
     @Override
     public Mono<Reply> fetchByNameAndFormat(ChatInputInteractionEvent event, String objectName, ApiClient apiClient, Mono<OwnerContext> ownerContextMono) {
         logger.debug("Manual input detected. Searching for container by name.");
-        Mono<String> ownerPriority = EventUtility.getOptionValueAsString(event, getSubCommandName(), CommandConstants.OPTION_PRIORITIZE);
+        Mono<String> ownerPriority = EventUtility.getOptionValueAsString(event, getSubCommandName(), commandConfig.getOptionPrioritize());
         return Mono.zip(ownerContextMono, ownerPriority)
                 .flatMap(tuple -> {
                     OwnerContext owner = tuple.getT1();

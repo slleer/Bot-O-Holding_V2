@@ -1,8 +1,8 @@
 package com.botofholding.bot.AutoComplete.Providers;
 
+import com.botofholding.bot.Config.CommandConfig;
 import com.botofholding.bot.Domain.DTOs.Request.AutoCompleteRequestDto;
 import com.botofholding.contract.DTO.Response.AutoCompleteDto;
-import com.botofholding.bot.Utility.CommandConstants;
 import com.botofholding.bot.Utility.EventUtility;
 import discord4j.core.event.domain.interaction.ChatInputAutoCompleteEvent;
 import discord4j.core.object.command.ApplicationCommandInteractionOptionValue;
@@ -14,6 +14,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public interface AutoCompleteProvider {
+
+    CommandConfig getCommandConfig();
 
     String getSubCommandName();
 
@@ -38,7 +40,7 @@ public interface AutoCompleteProvider {
                 .flatMap(this::fetchSuggestions) // Calls the concrete implementation
                 .flatMap(response -> {
                     List<ApplicationCommandOptionChoiceData> suggestions = response.stream()
-                            .limit(CommandConstants.DISCORD_CHOICE_LIMIT)
+                            .limit(getCommandConfig().getDiscordChoiceLimit())
                             .map(dto -> ApplicationCommandOptionChoiceData
                                     .builder()
                                     .name(buildOptionName(dto))

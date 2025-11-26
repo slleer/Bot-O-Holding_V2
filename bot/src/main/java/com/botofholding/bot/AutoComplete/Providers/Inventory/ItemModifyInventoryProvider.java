@@ -4,7 +4,6 @@ import com.botofholding.bot.AutoComplete.Providers.AbstractActiveItemNameProvide
 import com.botofholding.bot.AutoComplete.Providers.InventoryProvider;
 import com.botofholding.bot.Config.CommandConfig;
 import com.botofholding.bot.Service.ApiClient;
-import com.botofholding.bot.Utility.CommandConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -19,6 +18,5 @@ public class ItemModifyInventoryProvider extends AbstractActiveItemNameProvider 
     @Override
     public String getSubCommandName() {
         return commandConfig.getSubcmdInventoryModify();
-        //SUBCMD_INVENTORY_MODIFY;
     }
 }

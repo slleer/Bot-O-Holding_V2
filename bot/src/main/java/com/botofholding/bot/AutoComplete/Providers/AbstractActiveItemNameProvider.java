@@ -4,7 +4,6 @@ import com.botofholding.bot.Config.CommandConfig;
 import com.botofholding.bot.Domain.DTOs.Request.AutoCompleteRequestDto;
 import com.botofholding.contract.DTO.Response.AutoCompleteDto;
 import com.botofholding.bot.Service.ApiClient;
-import com.botofholding.bot.Utility.CommandConstants;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
@@ -17,6 +16,11 @@ public abstract class AbstractActiveItemNameProvider implements AutoCompleteProv
     public AbstractActiveItemNameProvider(ApiClient apiClient, CommandConfig commandConfig) {
         this.apiClient = apiClient;
         this.commandConfig = commandConfig;
+    }
+
+    @Override
+    public CommandConfig getCommandConfig() {
+        return commandConfig;
     }
 
     @Override

@@ -1,11 +1,11 @@
 package com.botofholding.bot.SlashCommands.Parsers.Container;
 
+import com.botofholding.bot.Config.CommandConfig;
 import com.botofholding.bot.Domain.Entities.OwnerContext;
 import com.botofholding.bot.Domain.Entities.Reply;
 import com.botofholding.bot.Service.ApiClient;
 import com.botofholding.bot.SlashCommands.Parsers.ContainerParser;
 import com.botofholding.bot.SlashCommands.Parsers.OwnerContextProvider;
-import com.botofholding.bot.Utility.CommandConstants;
 import com.botofholding.bot.Utility.EventUtility;
 import com.botofholding.bot.Utility.ReplyUtility;
 import com.botofholding.bot.Utility.MessageFormatter;
@@ -15,22 +15,29 @@ import reactor.core.publisher.Mono;
 
 @Component
 public class DeleteContainerParser implements ContainerParser, OwnerContextProvider {
+
+    private final CommandConfig commandConfig;
+
+    public DeleteContainerParser(CommandConfig commandConfig) {
+        this.commandConfig = commandConfig;
+    }
+
     @Override
     public String getSubCommandName() {
-        return CommandConstants.SUBCMD_CONTAINER_DELETE;
+        return commandConfig.getSubcmdContainerDelete();
     }
 
     @Override
     public String getContext() {
-        return CommandConstants.CONTEXT_CONTAINER_DELETE;
+        return commandConfig.getContextContainerDelete();
     }
 
     @Override
     public Mono<Void> execute(ChatInputInteractionEvent event, ApiClient apiClient) {
 
         Mono<OwnerContext> ownerContextMono = getOwnerContext(event, apiClient);
-        Mono<String> containerToDelete = EventUtility.getOptionValueAsString(event, getSubCommandName(), CommandConstants.OPTION_NAME);
-        Mono<Long> containerIdMono = EventUtility.getOptionValueAsLong(event, getSubCommandName(), CommandConstants.OPTION_ID);
+        Mono<String> containerToDelete = EventUtility.getOptionValueAsString(event, getSubCommandName(), commandConfig.getOptionName());
+        Mono<Long> containerIdMono = EventUtility.getOptionValueAsLong(event, getSubCommandName(), commandConfig.getOptionId());
 
         Mono<Reply> replyMono = Mono.zip(ownerContextMono, containerToDelete, containerIdMono)
                 .flatMap(tuple -> {
