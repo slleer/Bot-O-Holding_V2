@@ -1,6 +1,5 @@
 package com.botofholding.bot.CommandSetup;
 
-import discord4j.common.JacksonResources;
 import discord4j.discordjson.json.ApplicationCommandRequest;
 import discord4j.rest.RestClient;
 import discord4j.rest.service.ApplicationService;
@@ -9,12 +8,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 @Component
@@ -22,53 +17,35 @@ public class GlobalCommandRegistrar implements ApplicationRunner {
     private final Logger logger = LoggerFactory.getLogger(GlobalCommandRegistrar.class);
 
     private final RestClient client;
+    private final CommandFactory commandFactory;
 
-    @Value("${bot.theme:generic}") // Injects the bot.theme property, defaults to "generic"
+    @Value("${bot.theme:generic}")
     private String theme;
 
-    //Use the rest client provided by our Bean
-    public GlobalCommandRegistrar(RestClient client) {
+    public GlobalCommandRegistrar(RestClient client, CommandFactory commandFactory) {
         this.client = client;
+        this.commandFactory = commandFactory;
     }
 
-    //This method will run only once on each start up and is automatically called with Spring so blocking is okay.
     @Override
-    public void run(ApplicationArguments args) throws IOException {
-        //Create an ObjectMapper that supported Discord4J classes
-        final JacksonResources d4jMapper = JacksonResources.create();
+    public void run(ApplicationArguments args) {
+        logger.info("Beginning command registration process for theme: '{}'", theme);
 
-        logger.info("Using '{}' theme for command registration.", theme);
-
-        // Convenience variables for the sake of easier to read code below.
-        PathMatchingResourcePatternResolver matcher = new PathMatchingResourcePatternResolver();
         final ApplicationService applicationService = client.getApplicationService();
         final long applicationId = client.getApplicationId().block();
 
-        //Get our commands json from resources as command data
-        List<ApplicationCommandRequest> commands = new ArrayList<>();
-        String commandLocation = "commands/" + theme + "/*.json";
-        logger.info("Loading command definitions from '{}'", commandLocation);
-        for (Resource resource : matcher.getResources(commandLocation)) {
-            try {
-                ApplicationCommandRequest request = d4jMapper.getObjectMapper()
-                        .readValue(resource.getInputStream(), ApplicationCommandRequest.class);
-                commands.add(request);
-                logger.debug("Loaded command definition from: {}", resource.getFilename());
-            } catch (IOException e) {
-                logger.error("Failed to read or parse command definition from resource: {}", resource.getFilename(), e);
-                // Decide if you want to continue or rethrow to stop the application
-                // For now, it will skip the problematic file and continue
-            }
-        }
+        // Get all commands directly from the factory.
+        List<ApplicationCommandRequest> commands = commandFactory.buildAllCommands();
 
         if (commands.isEmpty()) {
-            logger.warn("No command definitions found in '{}'. No commands will be registered.", commandLocation);
+            logger.warn("No commands were built by the factory. No commands will be registered.");
             return;
         }
 
-        logger.info("Registering {} global application command(s)...", commands.size());
+        logger.info("Registering {} global application command(s) for theme '{}'...", commands.size(), theme);
         applicationService.bulkOverwriteGlobalApplicationCommand(applicationId, commands)
-                .doOnNext(ignore -> logger.info("Successfully registered Global Commands for theme '{}'", theme))
+                .doOnNext(cmd -> logger.debug("Successfully registered command: {}", cmd.name()))
+                .doOnComplete(() -> logger.info("Successfully registered all global commands for theme '{}'", theme))
                 .doOnError(e -> logger.error("Failed to register global commands for theme '{}'", theme, e))
                 .subscribe();
     }
