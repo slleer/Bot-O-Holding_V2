@@ -240,6 +240,7 @@ public class ContainerServiceImpl implements ContainerService {
             throw new UnsupportedOperationException("Only users can have an active container to add items to.");
         }
 
+        logger.info("addItemToActiveContainer called");
         Container activeContainer = getActiveContainerAndLoadHierarchy(user);
         // 2. Find the item to be added. Prefer the ID if provided, as it's unambiguous.
         Optional<Item> itemById = Optional.ofNullable(addDto.getItemId())
