@@ -20,9 +20,11 @@ public class SettingsUserParser implements UserParser, RequestBodyParser<UserSet
 
     private final static Logger logger = LoggerFactory.getLogger(SettingsUserParser.class);
     private final CommandConfig commandConfig;
+    private final MessageFormatter messageFormatter;
 
-    public SettingsUserParser(CommandConfig commandConfig) {
+    public SettingsUserParser(CommandConfig commandConfig, MessageFormatter messageFormatter) {
         this.commandConfig = commandConfig;
+        this.messageFormatter = messageFormatter;
     }
 
     @Override
@@ -42,7 +44,7 @@ public class SettingsUserParser implements UserParser, RequestBodyParser<UserSet
         return buildRequestDto(event)
                 .flatMap(apiClient::updateMySettings)
                 .flatMap(apiResponse -> event
-                        .reply(MessageFormatter.formatSettingsUpdateReply(apiResponse))
+                        .reply(messageFormatter.formatSettingsUpdateReply(apiResponse))
                         .withEphemeral(extractEphemeralSetting(apiResponse)))
                 .contextWrite(ctx -> EventUtility.addUserContext(ctx, EventUtility.getInvokingUser(event)))
                 .then();

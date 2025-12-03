@@ -4,12 +4,12 @@ import com.botofholding.bot.Domain.Entities.ApiResponsePayload;
 import com.botofholding.contract.DTO.Response.*;
 import com.botofholding.contract.DTO.Request.*;
 import com.botofholding.bot.Exception.ApiException;
-import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.reactive.function.client.*;
 import reactor.core.publisher.Mono;
 import org.springframework.core.ParameterizedTypeReference;
@@ -19,6 +19,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class ApiClientImpl implements ApiClient {
@@ -38,13 +39,7 @@ public class ApiClientImpl implements ApiClient {
         this.environment = environment;
     }
 
-    /**
-     * This method is called by Spring after the bean is constructed.
-     * It programmatically checks the active profile to decide whether to fetch
-     * a real token or use a dummy one for tests. This is the robust way to
-     * handle environment-specific initialization.
-     */
-    @PostConstruct
+    @Override
     public void initialize() {
         if (Arrays.asList(environment.getActiveProfiles()).contains("test")) {
             logger.info("Skipping real token fetch. Using dummy API token for test profile.");
@@ -55,9 +50,6 @@ public class ApiClientImpl implements ApiClient {
         }
     }
 
-    /**
-     * Fetches the initial token for production/dev environments.
-     */
     private void initializeToken() {
         this.webClient.get()
                 .uri("/auth/bot-token")
@@ -72,17 +64,10 @@ public class ApiClientImpl implements ApiClient {
                 .block(); // Use .block() here because the bot cannot function without the token.
     }
 
-    /**
-     * A test-only initializer that sets a dummy token.
-     */
     private void initializeTokenForTest() {
         this.botAuthToken = "dummy-test-token";
     }
 
-    /**
-     * A filter function that adds the impersonation headers (the "actor")
-     * to every request by reading from the reactive context.
-     */
     private ExchangeFilterFunction addImpersonationHeaders() {
         return (request, next) -> Mono.deferContextual(contextView -> {
             ClientRequest newRequest = ClientRequest.from(request)
@@ -95,12 +80,8 @@ public class ApiClientImpl implements ApiClient {
         });
     }
 
-    /**
-     * A filter function that adds the stored Bearer token to every outgoing request.
-     */
     private ExchangeFilterFunction addAuthorizationHeader() {
         return (clientRequest, next) -> {
-            // Don't add the auth header to the token request itself
             if (clientRequest.url().getPath().equals("/api/auth/bot-token")) {
                 return next.exchange(clientRequest);
             }
@@ -110,9 +91,23 @@ public class ApiClientImpl implements ApiClient {
                         .headers(headers -> headers.setBearerAuth(botAuthToken))
                         .build());
             }
-            // If the token is somehow null, fail the request.
             return Mono.error(new IllegalStateException("API token is not available."));
         };
+    }
+
+    // =================================================================
+    // THEME API CALLS
+    // =================================================================
+
+    @Override
+    public Mono<ThemeDto> upsertTheme(ThemeRequestDto dto) {
+        logger.debug("Attempting to upsert a theme with name: {}", dto.getThemeName());
+        return webClient.put()
+                .uri("/themes")
+                .bodyValue(dto)
+                .retrieve()
+                .bodyToMono(new ParameterizedTypeReference<StandardApiResponse<ThemeDto>>() {})
+                .flatMap(this::handleApiResponse);
     }
 
     // =================================================================
@@ -190,7 +185,6 @@ public class ApiClientImpl implements ApiClient {
                 .uri("/containers/{id}", containerId)
 
                 .headers(headers -> {
-                    // The target can now be a GUILD or a USER.
                     headers.set("X-Target-Owner-ID", String.valueOf(ownerId));
                     headers.set("X-Target-Owner-Type", ownerType);
                     if (ownerName != null) {
@@ -203,19 +197,14 @@ public class ApiClientImpl implements ApiClient {
     }
 
     @Override
-    public Mono<List<ContainerSummaryDto>> findContainers(String name, Long ownerId, String ownerType, String ownerName) {
+    public Mono<List<ContainerSummaryDto>> findContainers(String name, Long ownerId, String ownerType, String ownerName, String themeName) {
         logger.debug("Finding containers with name '{}' for owner {} of type {}.", name, ownerId, ownerType);
         return webClient.get()
-                .uri(uriBuilder -> {
-                    uriBuilder.path("/containers");
-                    // [REFACTORED] Only add the 'name' query parameter if it's not null or blank.
-                    if (name != null && !name.isBlank()) {
-                        uriBuilder.queryParam("name", name);
-                    }
-                    return uriBuilder.build();
-                })
+                .uri(uriBuilder -> uriBuilder.path("/containers")
+                        .queryParamIfPresent("name", Optional.ofNullable(name).filter(StringUtils::hasText))
+                        .queryParamIfPresent("theme", Optional.ofNullable(themeName))
+                        .build())
                 .headers(headers -> {
-                    // The target can now be a GUILD or a USER.
                     headers.set("X-Target-Owner-ID", String.valueOf(ownerId));
                     headers.set("X-Target-Owner-Type", ownerType);
                     if (ownerName != null) {
@@ -232,7 +221,6 @@ public class ApiClientImpl implements ApiClient {
         return webClient.put()
                 .uri("/containers/{id}/activate", containerId)
                 .headers(headers -> {
-                    // The target can now be a GUILD or a USER.
                     headers.set("X-Target-Owner-ID", String.valueOf(ownerId));
                     headers.set("X-Target-Owner-Type", ownerType);
                     if (ownerName != null) {
@@ -254,7 +242,6 @@ public class ApiClientImpl implements ApiClient {
                         .build()
                 )
                 .headers(headers -> {
-                    // The target can now be a GUILD or a USER.
                     headers.set("X-Target-Owner-ID", String.valueOf(ownerId));
                     headers.set("X-Target-Owner-Type", ownerType);
                     if (ownerName != null) {
@@ -369,15 +356,12 @@ public class ApiClientImpl implements ApiClient {
     }
 
     @Override
-    public Mono<List<ItemSummaryDto>> findItems(String name, Long ownerId, String ownerType, String ownerName) {
+    public Mono<List<ItemSummaryDto>> findItems(String name, Long ownerId, String ownerType, String ownerName, String themeName) {
         return webClient.get()
-                .uri(uriBuilder -> {
-                    uriBuilder.path("/items");
-                    if (name != null && !name.isBlank()) {
-                        uriBuilder.queryParam("name", name);
-                    }
-                    return uriBuilder.build();
-                })
+                .uri(uriBuilder -> uriBuilder.path("/items")
+                        .queryParamIfPresent("name", Optional.ofNullable(name).filter(StringUtils::hasText))
+                        .queryParamIfPresent("theme", Optional.ofNullable(themeName))
+                        .build())
                 .headers(headers -> {
                     headers.set("X-Target-Owner-ID", String.valueOf(ownerId));
                     headers.set("X-Target-Owner-Type", ownerType);
@@ -395,15 +379,14 @@ public class ApiClientImpl implements ApiClient {
     // =================================================================
 
     @Override
-    public Mono<List<AutoCompleteDto>> autocompleteContainers(String prefix, Long ownerId, String ownerType, String ownerName) {
+    public Mono<List<AutoCompleteDto>> autocompleteContainers(String prefix, Long ownerId, String ownerType, String ownerName, String themeName) {
         logger.debug("Autocompleting containers with prefix '{}' for owner {} of type {}", prefix, ownerName, ownerType);
         return webClient.get()
-                .uri(uriBuilder -> uriBuilder
-                        .path("/containers/autocomplete")
+                .uri(uriBuilder -> uriBuilder.path("/containers/autocomplete")
                         .queryParam("prefix", prefix)
+                        .queryParamIfPresent("theme", Optional.ofNullable(themeName))
                         .build())
                 .headers(headers -> {
-                    // The target can now be a GUILD or a USER.
                     headers.set("X-Target-Owner-ID", String.valueOf(ownerId));
                     headers.set("X-Target-Owner-Type", ownerType);
                     if (ownerName != null) {
@@ -415,12 +398,14 @@ public class ApiClientImpl implements ApiClient {
                 .flatMap(this::handleApiResponse);
     }
 
+
+
     @Override
-    public Mono<List<AutoCompleteDto>> autocompleteItems(String prefix, Long ownerId, String ownerType, String ownerName) {
+    public Mono<List<AutoCompleteDto>> autocompleteItems(String prefix, Long ownerId, String ownerType, String ownerName, String themeName) {
         return webClient.get()
-                .uri(uriBuilder -> uriBuilder
-                        .path("/items/autocomplete")
+                .uri(uriBuilder -> uriBuilder.path("/items/autocomplete")
                         .queryParam("prefix", prefix)
+                        .queryParamIfPresent("theme", Optional.ofNullable(themeName))
                         .build())
                 .headers(headers -> {
                     headers.set("X-Target-Owner-ID", String.valueOf(ownerId));

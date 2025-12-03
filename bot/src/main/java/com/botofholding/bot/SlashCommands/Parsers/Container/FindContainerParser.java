@@ -20,10 +20,12 @@ public class FindContainerParser implements ContainerParser, ByNameParser {
 
     private static final Logger logger = LoggerFactory.getLogger(FindContainerParser.class);
     private final CommandConfig commandConfig;
+    private final MessageFormatter messageFormatter;
 
     @Autowired
-    public FindContainerParser(CommandConfig commandConfig) {
+    public FindContainerParser(CommandConfig commandConfig, MessageFormatter messageFormatter) {
         this.commandConfig = commandConfig;
+        this.messageFormatter = messageFormatter;
     }
 
     @Override
@@ -46,7 +48,7 @@ public class FindContainerParser implements ContainerParser, ByNameParser {
         logger.debug("Autocomplete value detected. Fetching container by ID: {}", objectId);
         return ownerContextMono.flatMap(owner ->
                 apiClient.getContainerById(objectId, owner.ownerId(), owner.ownerType(), owner.ownerName())
-                        .map(MessageFormatter::formatGetContainerReply)
+                        .map(messageFormatter::formatGetContainerReply)
                         .map(message -> new Reply(message, owner.useEphemeral()))
         );
     }
@@ -56,12 +58,12 @@ public class FindContainerParser implements ContainerParser, ByNameParser {
         logger.debug("Manual input detected. Searching for container by name.");
 
         return ownerContextMono.flatMap(owner ->
-                apiClient.findContainers(objectName, owner.ownerId(), owner.ownerType(), owner.ownerName())
+                apiClient.findContainers(objectName, owner.ownerId(), owner.ownerType(), owner.ownerName(), commandConfig.getTheme())
                         .map(containerList -> {
                             if (containerList.isEmpty()) {
                                 throw new ReplyException("Could not find a container with that name.");
                             }
-                            return MessageFormatter.formatContainerReply(containerList);
+                            return messageFormatter.formatContainerReply(containerList);
                         })
                         .map(message -> new Reply(message, owner.useEphemeral())));
     }

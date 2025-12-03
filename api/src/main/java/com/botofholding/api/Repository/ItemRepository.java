@@ -24,15 +24,17 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
      * @param name The exact item name to search for.
      * @param actor the user making the request
      * @param principal the guild the request was made in or the actor if not in a guild
+     * @param themeName the name of the theme to filter by
      * @param pageable the pagination information
      * @return A sorted list of matching items.
      */
-    @Query("SELECT i FROM Item i JOIN i.createdBy o " +
+    @Query("SELECT i FROM Item i JOIN i.createdBy o LEFT JOIN i.theme t " +
             "WHERE LOWER(i.itemName) = LOWER(:name) " +
             "AND (o = :actor OR o = :principal OR TYPE(o) = SystemOwner) " +
+            "AND (t.themeName = :themeName OR t IS NULL) " +
             "ORDER BY CASE WHEN TYPE(o) = BohUser THEN 1 " +
             "WHEN TYPE(o) = Guild THEN 2 ELSE 3 END")
-    List<Item> findAllByNameForOwners(@Param("name") String name, @Param("actor") Owner actor, @Param("principal") Owner principal, Pageable pageable);
+    List<Item> findAllByNameForOwners(@Param("name") String name, @Param("actor") Owner actor, @Param("principal") Owner principal, @Param("themeName") String themeName, Pageable pageable);
 
 
     /**
@@ -44,16 +46,18 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
      * @param prefix The prefix to search for in the item name.
      * @param actor the user making the request
      * @param principal the guild the request was made in or the actor if not in a guild
+     * @param themeName the name of the theme to filter by
      * @param pageable the pagination information
      * @return A sorted list of matching items.
      */
-    @Query("SELECT i FROM Item i JOIN i.createdBy o " +
+    @Query("SELECT i FROM Item i JOIN i.createdBy o LEFT JOIN i.theme t " +
             "WHERE LOWER(i.itemName) LIKE CONCAT('%', LOWER(:prefix), '%') " +
             "AND (o = :actor OR o = :principal OR TYPE(o) = SystemOwner) " +
+            "AND (t.themeName = :themeName OR t IS NULL) " +
             "ORDER BY i.itemName, " +
             "CASE WHEN TYPE(o) = BohUser THEN 1 " +
             "WHEN TYPE(o) = Guild THEN 2 ELSE 3 END")
-    List<Item> findAllByNameLikeForOwners(@Param("prefix") String prefix, @Param("actor") Owner actor, @Param("principal") Owner principal, Pageable pageable);
+    List<Item> findAllByNameLikeForOwners(@Param("prefix") String prefix, @Param("actor") Owner actor, @Param("principal") Owner principal, @Param("themeName") String themeName, Pageable pageable);
 
     // [FIX] Corrected parameter name from :actor to :user.
     // [IMPROVEMENT] Changed to a "starts with" search (LIKE 'prefix%') for better autocomplete performance and behavior.

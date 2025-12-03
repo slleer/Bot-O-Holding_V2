@@ -81,7 +81,7 @@ public class ItemServiceTest {
     @DisplayName("Find Items: Should find an item owned by the user (actor)")
     void findItemsForPrincipalAndActor_findsUserItem() {
         // Act: Search for an item owned by the user
-        List<ItemSummaryDto> results = itemService.findItemsForPrincipalAndActor("Iron Sword", testUser, testGuild);
+        List<ItemSummaryDto> results = itemService.findItemsForPrincipalAndActor("Iron Sword", testUser, testGuild, null);
 
         // Assert
         assertThat(results).hasSize(1);
@@ -93,7 +93,7 @@ public class ItemServiceTest {
     @DisplayName("Find Items: Should find an item owned by the guild (principal)")
     void findItemsForPrincipalAndActor_findsGuildItem() {
         // Act: Search for an item owned by the guild
-        List<ItemSummaryDto> results = itemService.findItemsForPrincipalAndActor("Guild Banner", testUser, testGuild);
+        List<ItemSummaryDto> results = itemService.findItemsForPrincipalAndActor("Guild Banner", testUser, testGuild, null);
 
         // Assert
         assertThat(results).hasSize(1);
@@ -105,7 +105,7 @@ public class ItemServiceTest {
     @DisplayName("Find Items: Should return an empty list for a non-existent item")
     void findItemsForPrincipalAndActor_returnsEmptyForNoMatch() {
         // Act: Search for an item that does not exist
-        List<ItemSummaryDto> results = itemService.findItemsForPrincipalAndActor("Mythical Armor", testUser, testGuild);
+        List<ItemSummaryDto> results = itemService.findItemsForPrincipalAndActor("Mythical Armor", testUser, testGuild, null);
 
         // Assert
         assertThat(results).isEmpty();
@@ -115,7 +115,7 @@ public class ItemServiceTest {
     @DisplayName("Autocomplete: Should find items owned by user and system with same prefix")
     void autocompleteItemsForPrincipalAndActor_findsUserAndSystemItems() {
         // Act: Search for a prefix that matches items from different owners
-        List<AutoCompleteDto> results = itemService.autocompleteItemsForPrincipalAndActor("Iron", testUser, testGuild);
+        List<AutoCompleteDto> results = itemService.autocompleteItemsForPrincipalAndActor("Iron", testUser, testGuild, null);
 
         // Assert
         assertThat(results).hasSizeGreaterThan(1);
@@ -126,7 +126,7 @@ public class ItemServiceTest {
     @DisplayName("Autocomplete: Should return an empty list for a non-matching prefix")
     void autocompleteItemsForPrincipalAndActor_returnsEmptyForNoMatch() {
         // Act: Search for a prefix that matches nothing
-        List<AutoCompleteDto> results = itemService.autocompleteItemsForPrincipalAndActor("Xyz", testUser, testGuild);
+        List<AutoCompleteDto> results = itemService.autocompleteItemsForPrincipalAndActor("Xyz", testUser, testGuild, null);
 
         // Assert
         assertThat(results).isEmpty();

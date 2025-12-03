@@ -23,10 +23,12 @@ public class AddInventoryParser implements InventoryParser, RequestBodyParser<Ad
 
     private static final Logger logger = LoggerFactory.getLogger(AddInventoryParser.class);
     private final CommandConfig commandConfig;
+    private final MessageFormatter messageFormatter;
 
     @Autowired
-    public AddInventoryParser(CommandConfig commandConfig) {
+    public AddInventoryParser(CommandConfig commandConfig, MessageFormatter messageFormatter) {
         this.commandConfig = commandConfig;
+        this.messageFormatter = messageFormatter;
     }
 
     @Override
@@ -57,7 +59,7 @@ public class AddInventoryParser implements InventoryParser, RequestBodyParser<Ad
                     TargetOwner targetOwner = tuple.getT2();
                     boolean useEphemeral = tuple.getT3();
                     return apiClient.addItemToActiveContainer(requestDto, targetOwner.ownerId(), targetOwner.ownerType(), targetOwner.ownerName())
-                            .map(payload -> new Reply(MessageFormatter.formatAddInventoryContainerReply(payload.data(), payload.message()), useEphemeral));
+                            .map(payload -> new Reply(messageFormatter.formatAddInventoryContainerReply(payload.data(), payload.message()), useEphemeral));
                 });
 
         logger.info("About to reply after completing apiClient call");

@@ -9,6 +9,8 @@ import java.util.List;
 
 public interface ApiClient {
 
+    void initialize();
+
     // BOT
     //Mono<String>
 
@@ -18,11 +20,14 @@ public interface ApiClient {
     Mono<UserSettingsDto> getMySettings();
     Mono<UserSettingsDto> updateMySettings(UserSettingsUpdateRequestDto dto);
 
+    // THEME
+    Mono<ThemeDto> upsertTheme(ThemeRequestDto dto);
+
     // CONTAINER
     Mono<ContainerSummaryDto> createContainer(ContainerRequestDto dto, Long targetOwnerId, String targetOwnerType, String targetOwnerName);
     Mono<ContainerSummaryDto> getContainerById(Long containerId, Long ownerId, String ownerType, String ownerName);
-    Mono<List<ContainerSummaryDto>> findContainers(String name, Long ownerId, String ownerType, String ownerName);
-    Mono<List<AutoCompleteDto>> autocompleteContainers(String prefix, Long ownerId, String ownerType, String ownerName);
+    Mono<List<ContainerSummaryDto>> findContainers(String name, Long ownerId, String ownerType, String ownerName, String themeName);
+    Mono<List<AutoCompleteDto>> autocompleteContainers(String prefix, Long ownerId, String ownerType, String ownerName, String themeName);
     Mono<ContainerSummaryDto> useContainerById(Long containerId, Long ownerId, String ownerType, String ownerName);
     Mono<ContainerSummaryDto> useContainerByName(String containerName, String ownerPriority, Long ownerId, String ownerType, String ownerName);
     Mono<ContainerSummaryDto> getActiveContainer();
@@ -30,8 +35,8 @@ public interface ApiClient {
 
     // ITEM
     Mono<ItemSummaryDto> getItemById(Long itemId, Long ownerId, String ownerType, String ownerName);
-    Mono<List<ItemSummaryDto>> findItems(String name, Long ownerId, String ownerType, String ownerName);
-    Mono<List<AutoCompleteDto>> autocompleteItems(String prefix, Long ownerId, String ownerType, String ownerName);
+    Mono<List<ItemSummaryDto>> findItems(String name, Long ownerId, String ownerType, String ownerName, String themeName);
+    Mono<List<AutoCompleteDto>> autocompleteItems(String prefix, Long ownerId, String ownerType, String ownerName, String themeName);
     Mono<List<AutoCompleteDto>> autocompleteActiveContainerItems(String prefix);
     Mono<List<AutoCompleteDto>> autocompleteParentActiveContainerItems(String prefix);
 

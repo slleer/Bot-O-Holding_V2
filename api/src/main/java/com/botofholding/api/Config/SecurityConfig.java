@@ -4,6 +4,7 @@ package com.botofholding.api.Config;
 import com.botofholding.api.Security.JwtAuthFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -31,6 +32,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Allow unauthenticated access to a token generation endpoint for the bot.
                         .requestMatchers("/api/auth/bot-token").permitAll()
+                        // Allow the bot to upsert themes, requires ROLE_BOT authority.
+                        .requestMatchers(HttpMethod.PUT, "/api/themes").hasAuthority("ROLE_BOT")
                         // Allow unauthenticated access to actuator endpoints.
                         .requestMatchers("/actuator/**").permitAll() // Permit all access to actuator endpoints
                         // Secure all other API endpoints.

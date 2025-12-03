@@ -36,7 +36,8 @@ public abstract class AbstractContainerNameProvider implements AutoCompleteProvi
                 request.getPrefix(),
                 targetOwner.ownerId(),
                 targetOwner.ownerType(),
-                targetOwner.ownerName()
+                targetOwner.ownerName(),
+                commandConfig.getTheme()
         );
     }
 }

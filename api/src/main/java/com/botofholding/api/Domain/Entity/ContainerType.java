@@ -40,6 +40,10 @@ public class ContainerType extends AuditableEntity {
     @Column(name = "CNTNR_TYPE_DESC", length = 250)
     private String containerTypeDescription;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "THEME_ID")
+    private Theme theme;
+
     @Override
     public String toString() {
         return "ContainerType: " + containerTypeName + (containerTypeDescription != null && !containerTypeDescription.strip().isEmpty() ? " Description: " + containerTypeDescription : "");

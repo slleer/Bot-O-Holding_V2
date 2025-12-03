@@ -19,10 +19,12 @@ import java.util.List;
 public class FindActiveContainerParser implements ContainerParser {
     private static final Logger logger = LoggerFactory.getLogger(FindActiveContainerParser.class);
     private final CommandConfig commandConfig;
+    private final MessageFormatter messageFormatter;
 
     @Autowired
-    public FindActiveContainerParser(CommandConfig commandConfig) {
+    public FindActiveContainerParser(CommandConfig commandConfig, MessageFormatter messageFormatter) {
         this.commandConfig = commandConfig;
+        this.messageFormatter = messageFormatter;
     }
 
     @Override
@@ -42,7 +44,7 @@ public class FindActiveContainerParser implements ContainerParser {
         return userEphemeralMono
                 .flatMap( userEphemeral ->
                         apiClient.getActiveContainer().flatMap(activeContainer -> {
-                            List<String> message = MessageFormatter.formatActiveContainerReply(activeContainer);
+                            List<String> message = messageFormatter.formatActiveContainerReply(activeContainer);
                             return ReplyUtility.sendMultiPartReply(event, message, userEphemeral);
                         })
                 )

@@ -24,10 +24,12 @@ public class ModifyInventoryParser implements InventoryParser, RequestBodyParser
 
     private static final Logger logger = LoggerFactory.getLogger(ModifyInventoryParser.class);
     private final CommandConfig commandConfig;
+    private final MessageFormatter messageFormatter;
 
     @Autowired
-    public ModifyInventoryParser(CommandConfig commandConfig) {
+    public ModifyInventoryParser(CommandConfig commandConfig, MessageFormatter messageFormatter) {
         this.commandConfig = commandConfig;
+        this.messageFormatter = messageFormatter;
     }
 
     @Override
@@ -50,7 +52,7 @@ public class ModifyInventoryParser implements InventoryParser, RequestBodyParser
                     ModifyItemRequestDto requestDto = tuple.getT1();
                     boolean useEphemeral = tuple.getT2();
                     return apiClient.modifyItemInActiveContainer(requestDto)
-                            .map(payload -> new Reply(MessageFormatter.formatModifyInventoryContainerReply(payload.data(), payload.message()), useEphemeral));
+                            .map(payload -> new Reply(messageFormatter.formatModifyInventoryContainerReply(payload.data(), payload.message()), useEphemeral));
                 });
         logger.info("Replying after apiClient call in ModifyInventoryParser");
         return replyMono

@@ -9,6 +9,6 @@ import java.util.List;
 public interface ItemService {
 
     ItemSummaryDto findItemById(Long id);
-    List<ItemSummaryDto> findItemsForPrincipalAndActor(String name, Owner actor, Owner principal);
-    List<AutoCompleteDto> autocompleteItemsForPrincipalAndActor(String prefix, Owner actor, Owner principal);
+    List<ItemSummaryDto> findItemsForPrincipalAndActor(String name, Owner actor, Owner principal, String themeName);
+    List<AutoCompleteDto> autocompleteItemsForPrincipalAndActor(String prefix, Owner actor, Owner principal, String themeName);
 }

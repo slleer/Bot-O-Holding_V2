@@ -35,7 +35,8 @@ public abstract class AbstractItemNameProvider implements AutoCompleteProvider {
                 request.getPrefix(),
                 targetOwner.ownerId(),
                 targetOwner.ownerType(),
-                targetOwner.ownerName()
+                targetOwner.ownerName(),
+                commandConfig.getTheme()
         );
     }
 }

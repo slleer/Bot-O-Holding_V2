@@ -20,22 +20,24 @@ public interface ContainerRepository extends JpaRepository<Container, Long> {
      * @param name The name of the container to find
      * @param actor The user making the request
      * @param principal Either a guild or the requesting user if request not made from a guild
+     * @param themeName the name of the theme to filter by
      * @param pageable The pagination information
      * @return A list of matching containers or an empty list if none found.
      */
-    @Query("SELECT c FROM Container c WHERE (c.owner = :principal OR c.owner = :actor) AND (:name IS NULL OR c.containerName = :name)")
-    List<Container> findContainersForOwnersByName(@Param("name") String name, @Param("actor") Owner actor, @Param("principal") Owner principal, Pageable pageable);
+    @Query("SELECT c FROM Container c LEFT JOIN c.theme t WHERE (c.owner = :principal OR c.owner = :actor) AND (:name IS NULL OR c.containerName = :name) AND (t.themeName = :themeName OR t IS NULL)")
+    List<Container> findContainersForOwnersByName(@Param("name") String name, @Param("actor") Owner actor, @Param("principal") Owner principal, @Param("themeName") String themeName, Pageable pageable);
 
     /**
      *  Used for Autocomplete results, finds containers owned by EITHER the principal OR the actor that start with the given prefix.
      * @param prefix The prefix to search for.
      * @param actor The user making the request
      * @param principal Either a guild or the requesting user if request not made from a guild
+     * @param themeName the name of the theme to filter by
      * @param pageable The pagination information
      * @return A list of matching containers or an empty list if none found.
      */
-    @Query("SELECT c FROM Container c WHERE (c.owner = :principal OR c.owner = :actor) AND LOWER(c.containerName) LIKE LOWER(CONCAT(:prefix, '%'))")
-    List<Container> autocompleteForOwnersByPrefix(@Param("prefix") String prefix, @Param("actor") Owner actor, @Param("principal") Owner principal, Pageable pageable);
+    @Query("SELECT c FROM Container c LEFT JOIN c.theme t WHERE (c.owner = :principal OR c.owner = :actor) AND LOWER(c.containerName) LIKE LOWER(CONCAT(:prefix, '%')) AND (t.themeName = :themeName OR t IS NULL)")
+    List<Container> autocompleteForOwnersByPrefix(@Param("prefix") String prefix, @Param("actor") Owner actor, @Param("principal") Owner principal, @Param("themeName") String themeName, Pageable pageable);
 
     /**
      * Checks for the existence of a container with the given owner and name.

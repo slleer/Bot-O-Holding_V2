@@ -4,6 +4,7 @@ package com.botofholding.api.Security;
 import com.botofholding.api.Domain.Entity.BohUser;
 import com.botofholding.api.Domain.Entity.Guild;
 import com.botofholding.api.Domain.Entity.Owner;
+import com.botofholding.api.Domain.Entity.SystemOwner;
 import com.botofholding.api.Domain.Enum.OwnerType;
 import com.botofholding.api.Repository.OwnerRepository;
 import jakarta.servlet.FilterChain;
@@ -40,15 +41,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain) throws ServletException, IOException {
 
         final String authHeader = request.getHeader("Authorization");
-        // --- The Actor (WHO is doing this?) ---
-        final String actorIdHeader = request.getHeader("X-On-Behalf-Of-User-ID");
-        final String actorUserNameHeader = request.getHeader("X-On-Behalf-Of-User-Name");
-        final String globalNameHeader = request.getHeader("X-On-Behalf-Of-Global-Name");
-
-        // --- The Principal/Owner (WHOSE stuff is this?) ---
-        final String targetOwnerIdHeader = request.getHeader("X-Target-Owner-ID");
-        final String ownerTypeHeader = request.getHeader("X-Target-Owner-Type");
-        final String ownerNameHeader = request.getHeader("X-Target-Owner-Name"); // Primarily for Guild name provisioning
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
@@ -57,36 +49,54 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         final String jwt = authHeader.substring(7);
         if (jwtService.validateToken(jwt) && "bot-service-account".equals(jwtService.getPrincipalFromToken(jwt))) {
-            // Token is valid and belongs to our bot. Now, check for impersonation.
-            try {
-                // [FIX] We must establish the ACTOR and set it in the context BEFORE
-                // we attempt to provision a principal, which might trigger a database save.
-                Owner actor = findAndProvisionActor(actorIdHeader, actorUserNameHeader, globalNameHeader);
-                request.setAttribute("requestActor", actor); // Set the actor for the AuditorAware bean.
+            // Token is valid and belongs to our bot.
 
-                // Scenario 1: Explicit Target (e.g., acting on a Guild or another User)
-                if (targetOwnerIdHeader != null && !targetOwnerIdHeader.isBlank() && ownerTypeHeader != null && !ownerTypeHeader.isBlank()) {
-                    log.debug("Processing request with explicit target owner.");
+            // Handle the special case for the theme upsert endpoint
+            if ("/api/themes".equals(request.getRequestURI()) && "PUT".equalsIgnoreCase(request.getMethod())) {
+                log.debug("Processing system-level request for theme upsert.");
+                SystemOwner systemOwner = (SystemOwner) ownerRepository.findByDiscordId(SystemOwner.SYSTEM_OWNER_DISCORD_ID)
+                        .orElseThrow(() -> new IllegalStateException("SystemOwner not found in database."));
+                setSecurityContext(request, systemOwner);
+            } else {
+                // --- The Actor (WHO is doing this?) ---
+                final String actorIdHeader = request.getHeader("X-On-Behalf-Of-User-ID");
+                final String actorUserNameHeader = request.getHeader("X-On-Behalf-Of-User-Name");
+                final String globalNameHeader = request.getHeader("X-On-Behalf-Of-Global-Name");
 
-                    Long targetOwnerId = Long.parseLong(targetOwnerIdHeader);
-                    OwnerType ownerType = OwnerType.valueOf(ownerTypeHeader.toUpperCase());
+                // --- The Principal/Owner (WHOSE stuff is this?) ---
+                final String targetOwnerIdHeader = request.getHeader("X-Target-Owner-ID");
+                final String ownerTypeHeader = request.getHeader("X-Target-Owner-Type");
+                final String ownerNameHeader = request.getHeader("X-Target-Owner-Name"); // Primarily for Guild name provisioning
+                try {
+                    // [FIX] We must establish the ACTOR and set it in the context BEFORE
+                    // we attempt to provision a principal, which might trigger a database save.
+                    Owner actor = findAndProvisionActor(actorIdHeader, actorUserNameHeader, globalNameHeader);
+                    request.setAttribute("requestActor", actor); // Set the actor for the AuditorAware bean.
 
-                    // Now, when this method calls .save(), the auditor will find the actor.
-                    Owner principal = findAndProvisionPrincipal(targetOwnerId, ownerType, ownerNameHeader, actor);
+                    // Scenario 1: Explicit Target (e.g., acting on a Guild or another User)
+                    if (targetOwnerIdHeader != null && !targetOwnerIdHeader.isBlank() && ownerTypeHeader != null && !ownerTypeHeader.isBlank()) {
+                        log.debug("Processing request with explicit target owner.");
 
-                    setSecurityContext(request, principal);
-                    log.debug("Successfully set principal to {} with Discord ID: {}", ownerType, targetOwnerId);
+                        Long targetOwnerId = Long.parseLong(targetOwnerIdHeader);
+                        OwnerType ownerType = OwnerType.valueOf(ownerTypeHeader.toUpperCase());
+
+                        // Now, when this method calls .save(), the auditor will find the actor.
+                        Owner principal = findAndProvisionPrincipal(targetOwnerId, ownerType, ownerNameHeader, actor);
+
+                        setSecurityContext(request, principal);
+                        log.debug("Successfully set principal to {} with Discord ID: {}", ownerType, targetOwnerId);
+                    }
+                    // Scenario 2: Implicit Target (e.g., /users/me)
+                    else {
+                        log.debug("Processing request with implicit target owner (actor is principal).");
+                        // In this case, the actor IS the principal.
+                        setSecurityContext(request, actor);
+                        log.debug("Successfully set principal to USER with Discord ID: {}", actorIdHeader);
+                    }
+
+                } catch (IllegalArgumentException e) {
+                    log.warn("Invalid impersonation headers provided. Reason: {}", e.getMessage());
                 }
-                // Scenario 2: Implicit Target (e.g., /users/me)
-                else {
-                    log.debug("Processing request with implicit target owner (actor is principal).");
-                    // In this case, the actor IS the principal.
-                    setSecurityContext(request, actor);
-                    log.debug("Successfully set principal to USER with Discord ID: {}", actorIdHeader);
-                }
-
-            } catch (IllegalArgumentException e) {
-                log.warn("Invalid impersonation headers provided. Reason: {}", e.getMessage());
             }
         }
 

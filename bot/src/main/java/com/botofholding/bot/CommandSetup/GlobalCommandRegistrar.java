@@ -1,11 +1,11 @@
 package com.botofholding.bot.CommandSetup;
 
+import com.botofholding.bot.Config.CommandConfig;
 import discord4j.discordjson.json.ApplicationCommandRequest;
 import discord4j.rest.RestClient;
 import discord4j.rest.service.ApplicationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
@@ -18,17 +18,17 @@ public class GlobalCommandRegistrar implements ApplicationRunner {
 
     private final RestClient client;
     private final CommandFactory commandFactory;
+    private final CommandConfig commandConfig;
 
-    @Value("${bot.theme:generic}")
-    private String theme;
-
-    public GlobalCommandRegistrar(RestClient client, CommandFactory commandFactory) {
+    public GlobalCommandRegistrar(RestClient client, CommandFactory commandFactory, CommandConfig commandConfig) {
         this.client = client;
         this.commandFactory = commandFactory;
+        this.commandConfig = commandConfig;
     }
 
     @Override
     public void run(ApplicationArguments args) {
+        String theme = commandConfig.getTheme();
         logger.info("Beginning command registration process for theme: '{}'", theme);
 
         final ApplicationService applicationService = client.getApplicationService();

@@ -43,24 +43,24 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     @Transactional
-    public List<ItemSummaryDto> findItemsForPrincipalAndActor(String name, Owner actor, Owner principal) {
+    public List<ItemSummaryDto> findItemsForPrincipalAndActor(String name, Owner actor, Owner principal, String themeName) {
         logger.info("Searching for items with name '{}' for owners: {} & {}", name, actor.getDisplayName(), principal.getDisplayName());
         Pageable top50 = Pageable.ofSize(50);
         
         return searchAndMapItems(
-                () -> itemRepository.findAllByNameForOwners(name, actor, principal, top50),
+                () -> itemRepository.findAllByNameForOwners(name, actor, principal, themeName, top50),
                 name,
                 itemMapper::toSummaryDto);
     }
 
     @Override
     @Transactional
-    public List<AutoCompleteDto> autocompleteItemsForPrincipalAndActor(String prefix, Owner actor, Owner principal) {
+    public List<AutoCompleteDto> autocompleteItemsForPrincipalAndActor(String prefix, Owner actor, Owner principal, String themeName) {
         logger.info("Searching for items with prefix '{}' for owners: {} & {}", prefix, actor.getDisplayName(), principal.getDisplayName());
         Pageable top25 = Pageable.ofSize(25);
 
         return searchAndMapItems(
-                () -> itemRepository.findAllByNameLikeForOwners(prefix, actor, principal, top25),
+                () -> itemRepository.findAllByNameLikeForOwners(prefix, actor, principal, themeName, top25),
                 prefix,
                 itemMapper::toAutoCompleteDto);
     }

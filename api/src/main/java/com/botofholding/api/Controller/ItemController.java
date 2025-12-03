@@ -46,14 +46,14 @@ public class ItemController extends BaseController {
 
     @GetMapping
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<StandardApiResponse<List<ItemSummaryDto>>> findItemsByName(@RequestParam(required = false) String name) {
+    public ResponseEntity<StandardApiResponse<List<ItemSummaryDto>>> findItemsByName(@RequestParam(required = false) String name, @RequestParam(required = false) String theme) {
         Owner principal = getAuthenticatedPrincipal();
         Owner actor = getRequestActor();
         logger.info("Attempting to find items for principal '{}' and actor '{}' with name: {}"
                 , principal.getDisplayName()
                 , actor.getDisplayName()
                 , name);
-        List<ItemSummaryDto> dtoList = itemService.findItemsForPrincipalAndActor(name, actor, principal);
+        List<ItemSummaryDto> dtoList = itemService.findItemsForPrincipalAndActor(name, actor, principal, theme);
         String message = responseBuilder.buildSuccessFoundMessage("Items", name);
         StandardApiResponse<List<ItemSummaryDto>> response = new StandardApiResponse<>(true, message, dtoList);
         return ResponseEntity.ok(response);
@@ -61,14 +61,14 @@ public class ItemController extends BaseController {
 
     @GetMapping("/autocomplete")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<StandardApiResponse<List<AutoCompleteDto>>> autocompleteItemsByName(@RequestParam String prefix) {
+    public ResponseEntity<StandardApiResponse<List<AutoCompleteDto>>> autocompleteItemsByName(@RequestParam String prefix, @RequestParam(required = false) String theme) {
         Owner principal = getAuthenticatedPrincipal();
         Owner actor = getRequestActor();
         logger.info("Performing autocomplete lookup for items with prefix '{}' for principal '{}' and actor '{}'."
                 , prefix
                 , principal.getDisplayName()
                 , actor.getDisplayName());
-        List<AutoCompleteDto> dtoList = itemService.autocompleteItemsForPrincipalAndActor(prefix, actor, principal);
+        List<AutoCompleteDto> dtoList = itemService.autocompleteItemsForPrincipalAndActor(prefix, actor, principal, theme);
         String message = responseBuilder.buildSuccessFoundMessage("Items", prefix);
         StandardApiResponse<List<AutoCompleteDto>> response = new StandardApiResponse<>(true, message, dtoList);
         return ResponseEntity.ok(response);

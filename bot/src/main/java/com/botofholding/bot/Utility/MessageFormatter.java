@@ -2,16 +2,25 @@ package com.botofholding.bot.Utility;
 
 import java.math.BigDecimal;
 
+import com.botofholding.bot.Config.CommandConfig;
 import com.botofholding.contract.DTO.Response.*;
 import com.botofholding.bot.Utility.config.ContainerDisplayOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.function.Function;
 
+@Component
 public final class MessageFormatter {
+
+    private final CommandConfig commandConfig;
+
+    public MessageFormatter(CommandConfig commandConfig) {
+        this.commandConfig = commandConfig;
+    }
 
     private static final Logger logger = LoggerFactory.getLogger(MessageFormatter.class);
 
@@ -36,8 +45,6 @@ public final class MessageFormatter {
     private static final Function<String, String> BOLD_ITALIC_VALUE_FORMATTER = MessageFormatter::boldItalic;
     private static final Function<String, String> SUB_BULLET_INDENT = indent -> "  " + indent;
 
-
-    private MessageFormatter(){}
     /**
      * A private helper to format a Float value by removing unnecessary trailing zeros.
      * For example, 5.0f becomes "5" and 5.50f becomes "5.5".
@@ -76,8 +83,6 @@ public final class MessageFormatter {
         return "||" + text + "||";
     }
 
-    //private static
-
     /**
      * Appends a fully formatted line to a StringBuilder using formatting strategies.
      * This is the core method for building consistent, styled replies.
@@ -90,7 +95,7 @@ public final class MessageFormatter {
      * @param labelFormatter A function to style the label.
      * @param valueFormatter A function to style the value.
      */
-    private static void appendLine(
+    private void appendLine(
             StringBuilder sb,
             String prefix,
             String label,
@@ -115,11 +120,10 @@ public final class MessageFormatter {
      * @param content The new string content to append.
      * @param header The header to use if a new chunk is created.
      */
-    private static void appendWithSplitting(List<StringBuilder> chunks, String content, String header) {
+    private void appendWithSplitting(List<StringBuilder> chunks, String content, String header) {
         StringBuilder lastChunk = chunks.get(chunks.size() - 1);
         if (lastChunk.length() + content.length() > DISCORD_CHAR_LIMIT) {
             StringBuilder newChunk = new StringBuilder();
-            // Start the new message with the original header for context.
             if (header != null && !header.isBlank()) {
                 newChunk.append(header);
             }
@@ -141,7 +145,7 @@ public final class MessageFormatter {
      * @param valueFormatter A function to style the value.
      * @param header The header to use if a new chunk is created.
      */
-    private static void appendLineWithSplitting(
+    private void appendLineWithSplitting(
             List<StringBuilder> chunks, String prefix, String label, String value,
             Function<String, String> labelFormatter, Function<String, String> valueFormatter, String header
     ) {
@@ -151,7 +155,7 @@ public final class MessageFormatter {
         }
     }
 
-    public static String formatUserReply(BohUserSummaryDto userDto, String context) {
+    public String formatUserReply(BohUserSummaryDto userDto, String context) {
         String displayName = userDto.getBohGlobalUserName() != null ? userDto.getBohGlobalUserName() : userDto.getBohUserName();
         StringBuilder sb = new StringBuilder();
         sb.append(HEADER_FORMATTER.apply(context + " User:")).append(BULLET).append(italic(displayName)).append("\n");
@@ -160,58 +164,44 @@ public final class MessageFormatter {
         return sb.toString();
     }
 
-    public static String formatUserReply(BohUserWithPrimaryContainerDto userDto, String context) {
-        StringBuilder sb = new StringBuilder();
-        sb.append(formatUserReply(userDto, context));
-        if (userDto.getPrimaryContainer().getContainerName() != null) {
-            appendLine(sb, "\n", "Primary Container", userDto.getPrimaryContainer().getContainerName(), BOLD_LABEL_FORMATTER, ITALIC_VALUE_FORMATTER);
-        }
-        return sb.toString();
-    }
-
-    public static List<String> formatGetContainerReply(ContainerSummaryDto containerDto) {
-        // Default options: show everything.
+    public List<String> formatGetContainerReply(ContainerSummaryDto containerDto) {
         ContainerDisplayOptions options = ContainerDisplayOptions.builder().build();
-        return formatContainerReply(containerDto, SUBHEADER_FORMATTER.apply("Found Container:"), BULLET, options);
+        return formatContainerReply(containerDto, SUBHEADER_FORMATTER.apply(commandConfig.getReplyHeaderFoundContainer()), BULLET, options);
     }
 
-    public static List<String> formatUseContainerReply(ContainerSummaryDto containerDto) {
+    public List<String> formatUseContainerReply(ContainerSummaryDto containerDto) {
         ContainerDisplayOptions options = ContainerDisplayOptions.builder().build();
-        return formatContainerReply(containerDto, SUBHEADER_FORMATTER.apply("Using Container:"), BULLET, options);
+        return formatContainerReply(containerDto, SUBHEADER_FORMATTER.apply(commandConfig.getReplyHeaderUsingContainer()), BULLET, options);
     }
 
-    public static List<String> formatAddContainerReply(ContainerSummaryDto containerDto) {
-        // On creation, the item list is always empty, so don't display it.
+    public List<String> formatAddContainerReply(ContainerSummaryDto containerDto) {
         ContainerDisplayOptions options = ContainerDisplayOptions.builder()
                 .displayItems(false)
                 .build();
-        return formatContainerReply(containerDto, SUBHEADER_FORMATTER.apply("New Container:"), BULLET, options);
+        return formatContainerReply(containerDto, SUBHEADER_FORMATTER.apply(commandConfig.getReplyHeaderNewContainer()), BULLET, options);
     }
 
-    public static List<String> formatActiveContainerReply(ContainerSummaryDto activeContainer) {
+    public List<String> formatActiveContainerReply(ContainerSummaryDto activeContainer) {
         ContainerDisplayOptions options = ContainerDisplayOptions.builder().build();
-        return formatContainerReply(activeContainer, SUBHEADER_FORMATTER.apply("Active Container:"), BULLET, options);
+        return formatContainerReply(activeContainer, SUBHEADER_FORMATTER.apply(commandConfig.getReplyHeaderActiveContainer()), BULLET, options);
     }
 
-    public static List<String> formatAddInventoryContainerReply(ContainerSummaryDto containerDto, String successMessage) {
-        // TODO - decide if the add, drop, and modify formatter messages should be combined due to similar logic.
+    public List<String> formatAddInventoryContainerReply(ContainerSummaryDto containerDto, String successMessage) {
         ContainerDisplayOptions options = ContainerDisplayOptions.builder().displayStatus(false).build();
         return formatContainerReply(containerDto, SUBHEADER_FORMATTER.apply(successMessage), BULLET, options);
     }
 
-    public static List<String> formatDropInventoryContainerReply(ContainerSummaryDto updatedContainer, String successMessage) {
+    public List<String> formatDropInventoryContainerReply(ContainerSummaryDto updatedContainer, String successMessage) {
         ContainerDisplayOptions options = ContainerDisplayOptions.builder().displayStatus(false).build();
         return formatContainerReply(updatedContainer, SUBHEADER_FORMATTER.apply(successMessage), BULLET, options);
     }
 
-    public static List<String> formatModifyInventoryContainerReply(ContainerSummaryDto containerDto, String successMessage) {
+    public List<String> formatModifyInventoryContainerReply(ContainerSummaryDto containerDto, String successMessage) {
         ContainerDisplayOptions options = ContainerDisplayOptions.builder().displayStatus(false).build();
         return formatContainerReply(containerDto, SUBHEADER_FORMATTER.apply(successMessage), BULLET, options);
     }
 
-
-    // TODO - implement system to deal with the 2000 character limit using either editReply, createFollowup, or threads with createMessage. Most likely not editReply (seems more suited to deferred responses).
-    private static List<String> formatContainerReply(ContainerSummaryDto containerDto, String header, String bullet, ContainerDisplayOptions options) {
+    private List<String> formatContainerReply(ContainerSummaryDto containerDto, String header, String bullet, ContainerDisplayOptions options) {
         List<StringBuilder> chunks = new ArrayList<>();
         chunks.add(new StringBuilder()); // Start with the first chunk
 
@@ -248,28 +238,20 @@ public final class MessageFormatter {
         return chunks.stream().map(StringBuilder::toString).filter(s -> !s.isEmpty()).toList();
     }
 
-    private static void formatAndRenderItemTree(List<ContainerItemSummaryDto> allItems, ContainerDisplayOptions options, List<StringBuilder> chunks, String initialBullet, String continuedHeader) {
-        // Sort all items by their full path. This naturally groups parents with their children.
-        // e.g., "Backpack" comes before "Backpack > Potion Pouch"
+    private void formatAndRenderItemTree(List<ContainerItemSummaryDto> allItems, ContainerDisplayOptions options, List<StringBuilder> chunks, String initialBullet, String continuedHeader) {
         List<ContainerItemSummaryDto> sortedItems = allItems.stream()
                 .sorted(Comparator.comparing(ContainerItemSummaryDto::getPath))
                 .toList();
 
         for (ContainerItemSummaryDto item : sortedItems) {
-            // Determine the indent level by counting the path separators.
             int depth = item.getPath().split(" > ").length - 1;
             if(depth > 0)
                 depth++;
             String bullet = "  ".repeat(depth) + initialBullet;
 
-            // Get just the item's own name, not the full path.
-            String[] pathParts = item.getPath().split(" > ");
-            //String itemName = pathParts[pathParts.length - 1];
-
             String itemLine = bullet + (item.getQuantity() > 1 ? bold(String.format("%dx ", item.getQuantity())) : "") + item.getItemName()  + "\n";
             appendWithSplitting(chunks, itemLine, continuedHeader);
 
-            // Print the details for this item with one extra level of indent.
             String detailBullet = "  " + bullet;
             if (options.isDisplayNote() && item.getUserNote() != null && !item.getUserNote().isBlank()) {
                 appendLineWithSplitting(chunks, detailBullet, "-# ", item.getUserNote(), EMPTY_LABEL_FORMATTER, ITALIC_VALUE_FORMATTER, continuedHeader);
@@ -286,24 +268,22 @@ public final class MessageFormatter {
         }
     }
 
-    public static List<String> formatContainerReply(List<ContainerSummaryDto> dtos) {
+    public List<String> formatContainerReply(List<ContainerSummaryDto> dtos) {
         if (dtos.isEmpty()) {
-            // This case is handled in the parser, but it's good practice to be defensive.
-            return List.of(HEADER_FORMATTER.apply("No Container(s) Found."));
+            return List.of(HEADER_FORMATTER.apply(commandConfig.getReplyHeaderNoContainersFound()));
         }
-        // For a list view, we want to show everything for each container.
         ContainerDisplayOptions options = ContainerDisplayOptions.builder()
                 //.displayItems(false)
                 .displayStatus(false)
                 .build();
 
         if (dtos.size() == 1) {
-            return formatContainerReply(dtos.get(0), SUBHEADER_FORMATTER.apply("Found Container:"), BULLET, options);
+            return formatContainerReply(dtos.get(0), SUBHEADER_FORMATTER.apply(commandConfig.getReplyHeaderFoundContainer()), BULLET, options);
         }
 
         List<StringBuilder> chunks = new ArrayList<>();
         chunks.add(new StringBuilder());
-        String header = SUBHEADER_FORMATTER.apply("Found Containers:");
+        String header = SUBHEADER_FORMATTER.apply(commandConfig.getReplyHeaderFoundContainers());
         String continuedHeader = header + " (cont.)";
         appendWithSplitting(chunks, header, continuedHeader);
 
@@ -317,16 +297,16 @@ public final class MessageFormatter {
         return chunks.stream().map(StringBuilder::toString).filter(s -> !s.isEmpty()).toList();
     }
 
-    public static String formatSettingsUpdateReply(UserSettingsDto data) {
-        StringBuilder sb = new StringBuilder(HEADER_FORMATTER.apply("Updated Settings:"));
+    public String formatSettingsUpdateReply(UserSettingsDto data) {
+        StringBuilder sb = new StringBuilder(HEADER_FORMATTER.apply(commandConfig.getReplyHeaderUpdatedSettings()));
         appendLine(sb, BULLET_INDENTED, "Hide User Command Responses", data.isEphemeralUser() ? "True" : "False", BOLD_LABEL_FORMATTER, ITALIC_VALUE_FORMATTER);
         appendLine(sb, BULLET_INDENTED, "Hide Container Command Responses", data.isEphemeralContainer() ? "True" : "False", BOLD_LABEL_FORMATTER, ITALIC_VALUE_FORMATTER);
         appendLine(sb, BULLET_INDENTED, "Hide Item Command Responses", data.isEphemeralItem() ? "True" : "False", BOLD_LABEL_FORMATTER, ITALIC_VALUE_FORMATTER);
         return sb.toString();
     }
 
-    public static List<String> formatGetItemReply(ItemSummaryDto itemDto) {
-        return List.of(formatSingleItem(itemDto, HEADER_FORMATTER.apply("Found Item:"), BULLET));
+    public List<String> formatGetItemReply(ItemSummaryDto itemDto) {
+        return List.of(formatSingleItem(itemDto, HEADER_FORMATTER.apply(commandConfig.getReplyHeaderFoundItem()), BULLET));
     }
 
     /**
@@ -338,7 +318,7 @@ public final class MessageFormatter {
      * @param bullet  The bullet style to use.
      * @return A formatted string representing the item.
      */
-    private static String formatSingleItem(ItemSummaryDto itemDto, String header, String bullet) {
+    private String formatSingleItem(ItemSummaryDto itemDto, String header, String bullet) {
         StringBuilder sb = new StringBuilder();
         sb.append(header).append(bullet).append(bold(itemDto.getItemName())).append("\n");
 
@@ -370,10 +350,9 @@ public final class MessageFormatter {
         return sb.toString();
     }
 
-    public static List<String> formatItemReply(List<ItemSummaryDto> dtos) {
+    public List<String> formatItemReply(List<ItemSummaryDto> dtos) {
         if (dtos.isEmpty()) {
-            // This case is handled in the parser, but it's good practice to be defensive.
-            return List.of(HEADER_FORMATTER.apply("No items found."));
+            return List.of(HEADER_FORMATTER.apply(commandConfig.getReplyHeaderNoItemsFound()));
         }
         if (dtos.size() == 1) {
             return formatGetItemReply(dtos.get(0));
@@ -381,21 +360,20 @@ public final class MessageFormatter {
 
         List<StringBuilder> chunks = new ArrayList<>();
         chunks.add(new StringBuilder());
-        String header = HEADER_FORMATTER.apply("Found Items:");
-        String continuedHeader = HEADER_FORMATTER.apply("Found Items (cont.):");
+        String header = HEADER_FORMATTER.apply(commandConfig.getReplyHeaderFoundItems());
+        String continuedHeader = HEADER_FORMATTER.apply(commandConfig.getReplyHeaderFoundItems() + " (cont.):");
         appendWithSplitting(chunks, header, continuedHeader);
 
         for (int i = 0; i < dtos.size(); i++) {
             String bullet = (i + 1) + ". ";
-            // This reuses the existing logic perfectly and efficiently.
             String formattedItem = formatSingleItem(dtos.get(i), EMPTY, bullet);
             appendWithSplitting(chunks, formattedItem + "\n", continuedHeader);
         }
         return chunks.stream().map(StringBuilder::toString).filter(s -> !s.isEmpty()).toList();
     }
 
-    public static List<String> formatDeletedEntityReply(DeletedEntityDto dto) {
-        String message = HEADER_FORMATTER.apply(String.format("Deleted %s:", dto.getEntityType()))
+    public List<String> formatDeletedEntityReply(DeletedEntityDto dto) {
+        String message = HEADER_FORMATTER.apply(String.format(commandConfig.getReplyHeaderDeletedEntity(), dto.getEntityType()))
                 + BULLET + bold(dto.getName()) + "\n"
                 + BULLET_INDENTED + "ID: " + dto.getId() + "\n";
         return List.of(message);

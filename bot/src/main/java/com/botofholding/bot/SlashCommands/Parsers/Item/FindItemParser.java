@@ -20,10 +20,12 @@ public class FindItemParser implements ItemParser, ByNameParser {
 
     private static final Logger logger = LoggerFactory.getLogger(FindItemParser.class);
     private final CommandConfig commandConfig;
+    private final MessageFormatter messageFormatter;
 
     @Autowired
-    public FindItemParser(CommandConfig commandConfig) {
+    public FindItemParser(CommandConfig commandConfig, MessageFormatter messageFormatter) {
         this.commandConfig = commandConfig;
+        this.messageFormatter = messageFormatter;
     }
 
     @Override
@@ -46,7 +48,7 @@ public class FindItemParser implements ItemParser, ByNameParser {
         logger.debug("Autocomplete value detected. Fetching item by ID: {}", objectId);
         return ownerContextMono.flatMap(owner ->
                 apiClient.getItemById(objectId, owner.ownerId(), owner.ownerType(), owner.ownerName())
-                        .map(MessageFormatter::formatGetItemReply)
+                        .map(messageFormatter::formatGetItemReply)
                         .map(message -> new Reply(message, owner.useEphemeral()))
         );
     }
@@ -55,12 +57,12 @@ public class FindItemParser implements ItemParser, ByNameParser {
     public Mono<Reply> fetchByNameAndFormat(ChatInputInteractionEvent event, String objectName, ApiClient apiClient, Mono<OwnerContext> ownerContextMono) {
         logger.debug("Manual input detected. Searching for item by name: {}", objectName);
         return ownerContextMono.flatMap(owner ->
-                apiClient.findItems(objectName, owner.ownerId(), owner.ownerType(),owner.ownerName())
+                apiClient.findItems(objectName, owner.ownerId(), owner.ownerType(),owner.ownerName(), commandConfig.getTheme())
                         .map(itemList -> {
                             if (itemList.isEmpty()) {
                                 throw new ReplyException("Could not find an item with that name.");
                             }
-                            return MessageFormatter.formatItemReply(itemList);
+                            return messageFormatter.formatItemReply(itemList);
                         })
                         .map(message -> new Reply(message, owner.useEphemeral()))
         );

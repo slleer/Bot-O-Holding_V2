@@ -114,16 +114,17 @@ public class ContainerServiceImpl implements ContainerService {
      * @param name The name of the container to find.
      * @param actor The user requesting the container and one of the owners to filter by.
      * @param principal One of the owners to filter by if it's a GUILD otherwise the requesting user.
+     * @param themeName the name of the theme to filter by
      * @return A list of DTOs of the found containers.
      */
     @Override
     @Transactional
-    public List<ContainerSummaryDto> findContainersForPrincipalAndActor(String name, Owner actor, Owner principal) {
+    public List<ContainerSummaryDto> findContainersForPrincipalAndActor(String name, Owner actor, Owner principal, String themeName) {
         // Treat a blank name as a null filter, which the repository query understands.
         String effectiveName = (name != null && name.isBlank()) ? null : name;
         // [IMPROVEMENT] Always provide a sort order for predictable API results.
         Pageable sortByLastActive = PageRequest.of(0, 50, Sort.by(Sort.Direction.DESC, "lastActiveDateTime"));
-        List<Container> containers =  containerRepository.findContainersForOwnersByName(effectiveName, actor, principal, sortByLastActive);
+        List<Container> containers =  containerRepository.findContainersForOwnersByName(effectiveName, actor, principal, themeName, sortByLastActive);
 
         // The 'actor' is the user whose context we need for the 'active' flag.
         BohUser userContext = (actor instanceof BohUser) ? (BohUser) actor : null;
@@ -138,14 +139,15 @@ public class ContainerServiceImpl implements ContainerService {
      * @param prefix The search string to filter by.
      * @param actor The user requesting the autocomplete and one of the owners to filter by.
      * @param principal One of the owners to filter by if it's a GUILD otherwise the requesting user.
+     * @param themeName the name of the theme to filter by
      * @return A list of DTOs of the found containers.
      */
     @Override
     @Transactional
-    public List<AutoCompleteDto> autocompleteContainersForPrincipalAndActor(String prefix, Owner actor, Owner principal) {
+    public List<AutoCompleteDto> autocompleteContainersForPrincipalAndActor(String prefix, Owner actor, Owner principal, String themeName) {
         logger.info("Attempting to find containers with name prefix: {}*", prefix);
         Pageable top25ByLastActive = PageRequest.of(0,25, Sort.by(Sort.Direction.DESC, "lastActiveDateTime"));
-        List<Container> containers = containerRepository.autocompleteForOwnersByPrefix(prefix, actor, principal, top25ByLastActive);
+        List<Container> containers = containerRepository.autocompleteForOwnersByPrefix(prefix, actor, principal, themeName, top25ByLastActive);
 
         if (containers.isEmpty()) {
             logger.info("No containers found for autocomplete with prefix '{}'.", prefix);
@@ -253,7 +255,7 @@ public class ContainerServiceImpl implements ContainerService {
             logger.info("Item couldn't be found by id, searching by name {}", addDto.getItemName());
 
             Pageable top3 = PageRequest.of(0, 3);
-            List<Item> itemsByName = itemRepository.findAllByNameForOwners(addDto.getItemName(), actor, principal, top3);
+            List<Item> itemsByName = itemRepository.findAllByNameForOwners(addDto.getItemName(), actor, principal, activeContainer.getTheme().getThemeName(), top3);
 
             if (itemsByName.isEmpty()) {
                 throw new ItemNotFoundException("Item '" + addDto.getItemName() + "' not found.");

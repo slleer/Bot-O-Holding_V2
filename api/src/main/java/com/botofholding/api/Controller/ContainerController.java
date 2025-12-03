@@ -68,11 +68,11 @@ public class ContainerController extends BaseController {
      */
     @GetMapping
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<StandardApiResponse<List<ContainerSummaryDto>>> findContainersByName(@RequestParam(required = false) String name) {
+    public ResponseEntity<StandardApiResponse<List<ContainerSummaryDto>>> findContainersByName(@RequestParam(required = false) String name, @RequestParam(required = false) String theme) {
         Owner principal = getAuthenticatedPrincipal();
         Owner actor = getRequestActor();
         logger.info("Attempting to find containers for principal '{}' and actor '{}' with filter [name={}]", principal.getDisplayName(), actor.getDisplayName(), name);
-        List<ContainerSummaryDto> dtoList = containerService.findContainersForPrincipalAndActor(name, actor, principal);
+        List<ContainerSummaryDto> dtoList = containerService.findContainersForPrincipalAndActor(name, actor, principal, theme);
         String message = responseBuilder.buildSuccessFoundMessage( "Containers", name);
         StandardApiResponse<List<ContainerSummaryDto>> response = new StandardApiResponse<>(true, message, dtoList);
         return ResponseEntity.ok(response);
@@ -80,14 +80,14 @@ public class ContainerController extends BaseController {
 
     @GetMapping("/autocomplete")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<StandardApiResponse<List<AutoCompleteDto>>> autocompleteContainerByName(@RequestParam String prefix) {
+    public ResponseEntity<StandardApiResponse<List<AutoCompleteDto>>> autocompleteContainerByName(@RequestParam String prefix, @RequestParam(required = false) String theme) {
         Owner principal = getAuthenticatedPrincipal();
         Owner actor = getRequestActor();
         logger.info("Performing autocomplete for containers with prefix '{}' for principal '{}' and actor '{}'."
                 , prefix
                 , principal.getDisplayName()
                 , actor.getDisplayName());
-        List<AutoCompleteDto> dtoList = containerService.autocompleteContainersForPrincipalAndActor(prefix, actor, principal);
+        List<AutoCompleteDto> dtoList = containerService.autocompleteContainersForPrincipalAndActor(prefix, actor, principal, theme);
         String message = responseBuilder.buildSuccessFoundMessage( "Containers", prefix);
         StandardApiResponse<List<AutoCompleteDto>> response = new StandardApiResponse<>(true, message, dtoList);
         return ResponseEntity.ok(response);

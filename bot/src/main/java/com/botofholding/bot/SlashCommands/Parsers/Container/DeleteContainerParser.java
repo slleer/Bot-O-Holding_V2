@@ -17,9 +17,11 @@ import reactor.core.publisher.Mono;
 public class DeleteContainerParser implements ContainerParser, OwnerContextProvider {
 
     private final CommandConfig commandConfig;
+    private final MessageFormatter messageFormatter;
 
-    public DeleteContainerParser(CommandConfig commandConfig) {
+    public DeleteContainerParser(CommandConfig commandConfig, MessageFormatter messageFormatter) {
         this.commandConfig = commandConfig;
+        this.messageFormatter = messageFormatter;
     }
 
     @Override
@@ -46,7 +48,7 @@ public class DeleteContainerParser implements ContainerParser, OwnerContextProvi
                     Long containerId = tuple.getT3();
 
                     return apiClient.deleteContainer(containerName, containerId, context.ownerId(), context.ownerType(), context.ownerName())
-                            .map(deletedDto -> new Reply(MessageFormatter.formatDeletedEntityReply(deletedDto), context.useEphemeral()));
+                            .map(deletedDto -> new Reply(messageFormatter.formatDeletedEntityReply(deletedDto), context.useEphemeral()));
                 });
 
         return replyMono

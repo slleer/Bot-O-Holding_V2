@@ -23,10 +23,12 @@ public class ActivateContainerParser implements ContainerParser, ByNameParser {
 
     private static final Logger logger = LoggerFactory.getLogger(ActivateContainerParser.class);
     private final CommandConfig commandConfig;
+    private final MessageFormatter messageFormatter;
 
     @Autowired
-    public ActivateContainerParser(CommandConfig commandConfig) {
+    public ActivateContainerParser(CommandConfig commandConfig, MessageFormatter messageFormatter) {
         this.commandConfig = commandConfig;
+        this.messageFormatter = messageFormatter;
     }
 
     @Override
@@ -76,7 +78,7 @@ public class ActivateContainerParser implements ContainerParser, ByNameParser {
      * A private helper to create a Reply, ensuring guild-owned container replies are always public.
      */
     private Reply createReply(ContainerSummaryDto container, OwnerContext owner) {
-        List<String> message = MessageFormatter.formatActiveContainerReply(container);
+        List<String> message = messageFormatter.formatActiveContainerReply(container);
         // Use the centralized helper to determine the ephemeral state.
         return new Reply(message, isReplyEphemeral(container.getOwnerType(), owner.useEphemeral()));
     }

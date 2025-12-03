@@ -47,6 +47,10 @@ public class Container extends AuditableEntity {
     @Column(name = "LST_ACTV_DTTM")
     private LocalDateTime lastActiveDateTime;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "THEME_ID")
+    private Theme theme;
+
     public Container() {
         this.lastActiveDateTime = LocalDateTime.now();
     }

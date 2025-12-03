@@ -19,10 +19,12 @@ public class GetUserParser implements UserParser {
 
     private static final Logger logger = LoggerFactory.getLogger(GetUserParser.class);
     private final CommandConfig commandConfig;
+    private final MessageFormatter messageFormatter;
 
     @Autowired
-    public GetUserParser(CommandConfig commandConfig) {
+    public GetUserParser(CommandConfig commandConfig, MessageFormatter messageFormatter) {
         this.commandConfig = commandConfig;
+        this.messageFormatter = messageFormatter;
     }
 
     @Override
@@ -44,7 +46,7 @@ public class GetUserParser implements UserParser {
         Mono<String> replyMono = apiClient.getMyProfile()
                 .map(payload -> {
                     logger.info("Successfully retrieved user data for Discord ID: {} with message '{}'.", payload.data().getDiscordId(), payload.message());
-                    return MessageFormatter.formatUserReply(payload.data(), payload.message());
+                    return messageFormatter.formatUserReply(payload.data(), payload.message());
                 });
 
         return Mono.zip(userEphemeralMono, replyMono)

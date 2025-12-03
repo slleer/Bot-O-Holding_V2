@@ -19,9 +19,11 @@ public class DropInventoryParser implements InventoryParser {
 
     private static final Logger logger = LoggerFactory.getLogger(DropInventoryParser.class);
     private final CommandConfig commandConfig;
+    private final MessageFormatter messageFormatter;
 
-    public DropInventoryParser(CommandConfig commandConfig) {
+    public DropInventoryParser(CommandConfig commandConfig, MessageFormatter messageFormatter) {
         this.commandConfig = commandConfig;
+        this.messageFormatter = messageFormatter;
     }
 
     @Override
@@ -59,7 +61,7 @@ public class DropInventoryParser implements InventoryParser {
                     boolean useEphemeral = tuple.getT4();
                     logger.info("Making call to apiClient.dropItemFromActiveContainer with values: id={}, name='{}', quantity={}.", selection.id(), selection.name(), quantity);
                     return apiClient.dropItemFromActiveContainer(selection.id(), selection.name(), dropChildren, quantity)
-                            .map(payload -> new Reply(MessageFormatter.formatDropInventoryContainerReply(payload.data(), payload.message()), useEphemeral));
+                            .map(payload -> new Reply(messageFormatter.formatDropInventoryContainerReply(payload.data(), payload.message()), useEphemeral));
                 });
         return replyMono.flatMap(reply -> ReplyUtility.sendMultiPartReply(event, reply.message(), reply.isEphemeral()))
                 .contextWrite(ctx -> EventUtility.addUserContext(ctx, EventUtility.getInvokingUser(event)))

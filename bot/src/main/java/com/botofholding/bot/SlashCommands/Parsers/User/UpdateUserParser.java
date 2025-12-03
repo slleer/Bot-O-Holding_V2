@@ -23,10 +23,12 @@ public class UpdateUserParser implements UserParser, RequestBodyParser<UserReque
 
     private static final Logger logger = LoggerFactory.getLogger(UpdateUserParser.class);
     private final CommandConfig commandConfig;
+    private final MessageFormatter messageFormatter;
 
     @Autowired
-    public UpdateUserParser(CommandConfig commandConfig) {
+    public UpdateUserParser(CommandConfig commandConfig, MessageFormatter messageFormatter) {
         this.commandConfig = commandConfig;
+        this.messageFormatter = messageFormatter;
     }
 
     @Override
@@ -47,7 +49,7 @@ public class UpdateUserParser implements UserParser, RequestBodyParser<UserReque
 
         Mono<String> replyMono = buildRequestDto(event) // This now returns Mono<UserRequestDto>
                 .flatMap(apiClient::updateMyProfile)
-                .map(payload -> MessageFormatter.formatUserReply(payload.data(), payload.message()));
+                .map(payload -> messageFormatter.formatUserReply(payload.data(), payload.message()));
 
         return Mono.zip(userEphemeralMono, replyMono)
                 .flatMap(tuple -> {

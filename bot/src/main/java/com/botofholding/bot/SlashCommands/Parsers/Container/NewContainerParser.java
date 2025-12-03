@@ -20,9 +20,11 @@ public class NewContainerParser implements ContainerParser, RequestBodyParser<Co
 
     private static final Logger logger = LoggerFactory.getLogger(NewContainerParser.class);
     private final CommandConfig commandConfig;
+    private final MessageFormatter messageFormatter;
 
-    public NewContainerParser(CommandConfig commandConfig) {
+    public NewContainerParser(CommandConfig commandConfig, MessageFormatter messageFormatter) {
         this.commandConfig = commandConfig;
+        this.messageFormatter = messageFormatter;
     }
 
     @Override
@@ -66,7 +68,7 @@ public class NewContainerParser implements ContainerParser, RequestBodyParser<Co
                 .flatMap(tuple -> {
                     boolean useEphemeral = tuple.getT1();
                     ContainerSummaryDto newContainer = tuple.getT2();
-                    return ReplyUtility.sendMultiPartReply(event, MessageFormatter.formatAddContainerReply(newContainer), useEphemeral);
+                    return ReplyUtility.sendMultiPartReply(event, messageFormatter.formatAddContainerReply(newContainer), useEphemeral);
                 })
                 .contextWrite(ctx -> EventUtility.addUserContext(ctx, event.getInteraction().getUser()))
                 .then();

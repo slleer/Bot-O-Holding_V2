@@ -17,9 +17,9 @@ public interface ContainerService {
 
     ContainerSummaryDto addContainer(Owner principal, ContainerRequestDto containerRequestDto);
 
-    List<ContainerSummaryDto> findContainersForPrincipalAndActor(String name, Owner actor, Owner principal);
+    List<ContainerSummaryDto> findContainersForPrincipalAndActor(String name, Owner actor, Owner principal, String themeName);
 
-    List<AutoCompleteDto> autocompleteContainersForPrincipalAndActor(@NotNull String prefix, Owner actor, Owner principal);
+    List<AutoCompleteDto> autocompleteContainersForPrincipalAndActor(@NotNull String prefix, Owner actor, Owner principal, String themeName);
 
     ContainerSummaryDto findContainerById(@NotNull @Min(1) Long id, Owner actor);
 
