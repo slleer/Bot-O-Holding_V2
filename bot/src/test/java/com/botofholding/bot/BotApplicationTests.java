@@ -2,6 +2,8 @@ package com.botofholding.bot;
 
 
 import com.botofholding.bot.Service.ApiClient;
+import com.botofholding.contract.DTO.Request.ThemeRequestDto;
+import com.botofholding.contract.DTO.Response.ThemeDto;
 import discord4j.core.GatewayDiscordClient;
 import discord4j.rest.RestClient;
 import discord4j.rest.service.ApplicationService;
@@ -27,7 +29,13 @@ class BotApplicationTests {
 		@Bean
 		@Primary // Ensure this mock bean is used instead of the real one
 		public ApiClient apiClient() {
-			return Mockito.mock(ApiClient.class);
+			ApiClient mockApiClient = Mockito.mock(ApiClient.class);
+
+			// Stub the upsertTheme method to prevent NPE during startup in tests
+			Mockito.when(mockApiClient.upsertTheme(Mockito.any(ThemeRequestDto.class)))
+					.thenReturn(Mono.just(new ThemeDto()));
+
+			return mockApiClient;
 		}
 
 		/**
@@ -45,7 +53,7 @@ class BotApplicationTests {
 			RestClient mockRestClient = Mockito.mock(RestClient.class);
 			ApplicationService mockApplicationService = Mockito.mock(ApplicationService.class);
 
-			// Stub the methods that GlobalCommandRegistrar calls on RestClient
+			// Stub the methods that GlobalCommandRegistrar calls on RestClientMik
 			Mockito.when(mockRestClient.getApplicationId()).thenReturn(Mono.just(123456789L));
 			Mockito.when(mockRestClient.getApplicationService()).thenReturn(mockApplicationService);
 

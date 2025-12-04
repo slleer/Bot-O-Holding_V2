@@ -24,7 +24,7 @@ public class ApplicationInfoService {
             this.applicationArtifact = buildProperties.getArtifact();
         } else {
             // Provide default/fallback values for when running in an IDE without a full build
-            this.applicationVersion = "0.0.0-DEV";
+            this.applicationVersion = "0.1.0-DEV";
             this.applicationName = "api";
             this.applicationArtifact = "api";
             this.applicationBuildTimestamp = "N/A";

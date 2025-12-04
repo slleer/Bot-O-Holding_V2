@@ -10,8 +10,11 @@ import org.springframework.stereotype.Component;
 public class CommandConfig {
 
     // --- Theme ---
+    // The active theme name. This is the only theme property that should be configured here.
+    // It is overridden by the 'bot.commands.theme' property in theme-specific application properties.
+    // The canonical definitions for all themes (name and description) are located in:
+    // shared-config/src/main/resources/themes.properties
     private String theme = "generic";
-    private String themeDescription = "Theme for generic use [USERS, CONTAINERS, GROUPS, ITEMS]";
 
     // --- Reply Headers ---
     private String replyHeaderFoundContainer = "Found Container:";
@@ -110,7 +113,7 @@ public class CommandConfig {
     private String contextInventoryAdd = "inventory-add";
     private String optionInventoryAddItemDescription = "item to add";
     private String optionInventoryAddQuantityDescription = "Quantity of the item to add. Defaults to 1";
-    private String optionInventoryAddNoteDescription = "Add a note to the item (max 350 chars).";
+    private String optionInventoryAddNoteDescription = "Add a note to the item (max 350 characters).";
     private String optionInventoryAddParent = "put-inside";
     private String optionInventoryAddParentDescription = "Put the added item inside this item, if selected.";
     private String subcmdInventoryDrop = "drop";

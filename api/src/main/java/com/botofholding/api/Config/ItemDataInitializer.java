@@ -1,5 +1,6 @@
 package com.botofholding.api.Config;
 
+import com.botofholding.api.Repository.ThemeRepository;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.config.Configurator;
@@ -7,6 +8,7 @@ import com.botofholding.api.Domain.Seed.ItemSeedDto;
 import com.botofholding.api.Domain.Entity.Item;
 import com.botofholding.api.Domain.Entity.Owner;
 import com.botofholding.api.Domain.Entity.SystemOwner;
+import com.botofholding.api.Domain.Entity.Theme;
 import com.botofholding.api.Mapper.ItemMapper;
 import com.botofholding.api.Repository.ItemRepository;
 import com.botofholding.api.Repository.OwnerRepository;
@@ -17,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.annotation.Order;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -25,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.InputStream;
 import java.util.List;
+import java.util.Properties;
 import java.util.stream.Collectors;
 
 /**
@@ -40,13 +44,15 @@ public class ItemDataInitializer implements CommandLineRunner {
     private final ItemRepository itemRepository;
     private final ObjectMapper objectMapper;
     private final OwnerRepository ownerRepository;
+    private final ThemeRepository themeRepository;
     private final ItemMapper itemMapper;
 
     public ItemDataInitializer(ItemRepository itemRepository, ObjectMapper objectMapper,
-                               OwnerRepository ownerRepository, ItemMapper itemMapper) {
+                               OwnerRepository ownerRepository, ThemeRepository themeRepository, ItemMapper itemMapper) {
         this.itemRepository = itemRepository;
         this.objectMapper = objectMapper;
         this.ownerRepository = ownerRepository;
+        this.themeRepository = themeRepository;
         this.itemMapper = itemMapper;
     }
 
@@ -78,6 +84,24 @@ public class ItemDataInitializer implements CommandLineRunner {
             Owner systemOwner = ownerRepository.findByDiscordId(SystemOwner.SYSTEM_OWNER_DISCORD_ID)
                     .orElseThrow(() -> new RuntimeException("SystemOwner not found. Initialization order might be incorrect."));
 
+            // Load theme properties
+            Properties themeProps = new Properties();
+            try (InputStream themeInputStream = new ClassPathResource("themes.properties").getInputStream()) {
+                themeProps.load(themeInputStream);
+            }
+
+            // Find or create the D&D theme
+            String dndThemeName = themeProps.getProperty("dnd.name");
+            String dndThemeDesc = themeProps.getProperty("dnd.description");
+
+            Theme dndTheme = themeRepository.findByThemeName(dndThemeName).orElseGet(() -> {
+                logger.info("D&D theme not found. Creating it now.");
+                Theme newTheme = new Theme();
+                newTheme.setThemeName(dndThemeName);
+                newTheme.setThemeDescription(dndThemeDesc);
+                return themeRepository.save(newTheme);
+            });
+
             runAs(systemOwner, () -> {
                 try (InputStream inputStream = TypeReference.class.getResourceAsStream("/Data/itemList.json")) {
                     if (inputStream == null) {
@@ -85,16 +109,16 @@ public class ItemDataInitializer implements CommandLineRunner {
                         throw new RuntimeException("itemList.json not found");
                     }
 
-                    TypeReference<List<ItemSeedDto>> typeReference = new TypeReference<>() {
-                    };
+                    TypeReference<List<ItemSeedDto>> typeReference = new TypeReference<>() {};
                     List<ItemSeedDto> itemDtos = objectMapper.readValue(inputStream, typeReference);
 
                     List<Item> itemsToCreate = itemDtos.stream()
                             .map(itemMapper::toEntity)
+                            .peek(item -> item.setTheme(dndTheme)) // Associate all seeded items with the D&D theme
                             .collect(Collectors.toList());
 
                     itemRepository.saveAll(itemsToCreate);
-                    logger.info("Successfully seeded {} items to the database.", itemsToCreate.size());
+                    logger.info("Successfully seeded {} items to the database for the '{}' theme.", itemsToCreate.size(), dndThemeName);
 
                 } catch (Exception e) {
                     logger.error("Failed to seed items from file. Halting app execution.", e);

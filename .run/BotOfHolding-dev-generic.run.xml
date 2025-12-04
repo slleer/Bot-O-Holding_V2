@@ -1,7 +1,0 @@
-<component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="BotOfHolding-dev-generic" type="Multirun" separateTabs="false" reuseTabsWithFailures="true" startOneByOne="true" markFailedProcess="true" hideSuccessProcess="false" delayTime="5.5">
-    <runConfiguration name="Api-dev-generic" type="Spring Boot" />
-    <runConfiguration name="Bot-dev-generic" type="Spring Boot" />
-    <method v="2" />
-  </configuration>
-</component>
