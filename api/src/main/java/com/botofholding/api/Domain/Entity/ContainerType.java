@@ -41,6 +41,10 @@ public class ContainerType extends AuditableEntity {
     private String containerTypeDescription;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "PRNT_CNTNR_TYPE_ID")
+    private ContainerType parent;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "THEME_ID")
     private Theme theme;
 

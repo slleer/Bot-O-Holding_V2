@@ -35,9 +35,9 @@
         <discord4j.version>3.2.8</discord4j.version>
         <protobuf.version>3.25.5</protobuf.version>
         <spring-boot.version>3.5.0</spring-boot.version>
+        <liquibase.version>4.27.0</liquibase.version>
     </properties>
 
-    <!-- [FIX] This block ONLY manages versions and shared configurations. It does not add dependencies to the parent. -->
     <dependencyManagement>
         <dependencies>
             <!-- Project Modules -->
@@ -150,6 +150,11 @@
                 <artifactId>protobuf-java</artifactId>
                 <version>${protobuf.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.liquibase</groupId>
+                <artifactId>liquibase-core</artifactId>
+                <version>${liquibase.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -166,7 +171,6 @@
                         <showWarnings>true</showWarnings>
                     </configuration>
                 </plugin>
-                <!-- [FIX] Centralize Spring Boot plugin config for all modules -->
                 <plugin>
                     <groupId>org.springframework.boot</groupId>
                     <artifactId>spring-boot-maven-plugin</artifactId>
@@ -191,6 +195,15 @@
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>build-helper-maven-plugin</artifactId>
                     <version>3.6.0</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.liquibase</groupId>
+                    <artifactId>liquibase-maven-plugin</artifactId>
+                    <version>${liquibase.version}</version>
+                    <configuration>
+                        <changeLogFile>src/main/resources/db/changelog/db.changelog-master.yaml</changeLogFile>
+                        <promptOnNonLocalDatabase>false</promptOnNonLocalDatabase>
+                    </configuration>
                 </plugin>
             </plugins>
         </pluginManagement>

@@ -1,0 +1,10 @@
+databaseChangeLog:
+  - changeSet:
+      id: v0002-add-boh-data-purge-sql # A unique ID for this specific change
+      author: your_name
+      changes:
+        - sqlFile:
+            path: ../sql/boh_data_purge.sql # Relative path to the SQL file
+            relativeToChangelogFile: true
+            splitStatements: true
+            endDelimiter: GO # Crucial for SQL Server

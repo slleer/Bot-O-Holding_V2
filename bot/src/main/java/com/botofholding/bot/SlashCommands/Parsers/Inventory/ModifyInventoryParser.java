@@ -64,8 +64,12 @@ public class ModifyInventoryParser implements InventoryParser, RequestBodyParser
     @Override
     public Mono<ModifyItemRequestDto> buildRequestDto(ChatInputInteractionEvent event) {
         Mono<AutocompleteSelection> selectionMono = EventUtility.getAutocompleteSelection(event, getSubCommandName(), commandConfig.getOptionItem());
-        Mono<Optional<String>> noteMono = EventUtility.getOptionValueAsString(event, getSubCommandName(), commandConfig.getOptionNote()).map(Optional::of);
+        
+        Mono<Optional<String>> noteMono = EventUtility.getOptionValueAsString(event, getSubCommandName(), commandConfig.getOptionNote())
+                .map(Optional::of)
+                .defaultIfEmpty(Optional.of(""));
         Mono<Boolean> moveToRootMono = Mono.just(EventUtility.getOptionValue(event, getSubCommandName(), commandConfig.getOptionInventoryModifyMoveToRoot()).isPresent());
+        
         Mono<AutocompleteSelection> moveInsideMono = EventUtility.getAutocompleteSelection(event, getSubCommandName(), commandConfig.getOptionInventoryModifyMoveInside())
                 .defaultIfEmpty(new AutocompleteSelection("", null));
 
@@ -73,16 +77,27 @@ public class ModifyInventoryParser implements InventoryParser, RequestBodyParser
                 .flatMap(tuple -> {
                     AutocompleteSelection selection = tuple.getT1();
                     Optional<String> note = tuple.getT2();
-                    boolean moveToRoot = tuple.getT3();
+                    boolean moveToRootFlag = tuple.getT3();
                     AutocompleteSelection moveInside = tuple.getT4();
+                    
+                    logger.debug("selection: {}, note: {}, moveToRoot: {}, moveInside: {}", selection, note, moveToRootFlag, moveInside);
+
                     ModifyItemRequestDto dto = new ModifyItemRequestDto();
                     dto.setContainerItemId(selection.id());
                     dto.setContainerItemName(selection.name());
                     note.ifPresent(dto::setNote);
-                    dto.setMoveToRoot(moveToRoot);
-                    dto.setNewParentId(moveInside.id());
-                    dto.setNewParentName(moveInside.name());
-                    logger.debug("selection: {}, note: {}, moveToRoot: {}, moveInside: {}", selection, note, moveToRoot, moveInside);
+
+                    // Safely check if the user selected the special "move to root" option.
+                    boolean isMoveToRootSelected = Long.valueOf(-1).equals(moveInside.id());
+
+                    dto.setMoveToRoot(isMoveToRootSelected || moveToRootFlag);
+                    
+                    // Only set the parent ID and name if the user selected a real parent.
+                    if (!isMoveToRootSelected) {
+                        dto.setNewParentId(moveInside.id());
+                        dto.setNewParentName(moveInside.name());
+                    }
+
                     return Mono.just(dto);
                 });
     }

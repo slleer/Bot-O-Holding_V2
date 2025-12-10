@@ -326,6 +326,12 @@ public class ApiClientImpl implements ApiClient {
 
     @Override
     public Mono<ApiResponsePayload<ContainerSummaryDto>> modifyItemInActiveContainer(ModifyItemRequestDto dto) {
+        logger.debug("Attempting to modify item {} (qty: {}) in active container. Move-to-root: {}, new-parent-id: {}, new-parent-name: {}"
+                , dto.getContainerItemId()
+                , dto.getNewQuantity()
+                , dto.getMoveToRoot()
+                , dto.getNewParentId()
+                , dto.getNewParentName());
         return webClient.patch()
                 .uri("/containers/active/items")
                 .bodyValue(dto)

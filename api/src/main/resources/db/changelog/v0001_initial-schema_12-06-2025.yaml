@@ -1,0 +1,736 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1765038820683-1
+      author: sleer
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: PK_USER_CNTNR
+                  name: CNTNR_ID
+                  type: BIGINT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: OWNER_ID
+                  type: BIGINT
+              - column:
+                  name: CNTNR_NME
+                  type: NVARCHAR(75)
+              - column:
+                  name: CNTNR_DESC
+                  type: NVARCHAR(250)
+              - column:
+                  name: CNTNR_TYPE_ID
+                  type: BIGINT
+              - column:
+                  name: LST_ACTV_DTTM
+                  type: datetime
+              - column:
+                  constraints:
+                    nullable: false
+                  name: CRE_ID
+                  type: BIGINT
+              - column:
+                  name: CRE_DTTM
+                  type: datetime
+              - column:
+                  constraints:
+                    nullable: false
+                  name: LST_MDFD_ID
+                  type: BIGINT
+              - column:
+                  name: LST_MDFD_DTTM
+                  type: datetime
+              - column:
+                  name: THEME_ID
+                  type: BIGINT
+            remarks: Maps ownership of containers or items to respective owner types
+            tableName: CNTNR
+  - changeSet:
+      id: 1765038820683-2
+      author: sleer
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: PK_CNTNR_ITEM
+                  name: CNTNR_ITEM_ID
+                  type: BIGINT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: CNTNR_ID
+                  type: BIGINT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: ITEM_ID
+                  type: BIGINT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: ITM_QTY
+                  type: BIGINT
+              - column:
+                  name: USER_NOTE
+                  type: NVARCHAR(350)
+              - column:
+                  name: PARENT_ID
+                  type: BIGINT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: CRE_ID
+                  type: BIGINT
+              - column:
+                  constraints:
+                    nullable: false
+                  defaultValueComputed: getdate()
+                  name: CRE_DTTM
+                  type: datetime
+              - column:
+                  constraints:
+                    nullable: false
+                  name: LST_MDFD_ID
+                  type: BIGINT
+              - column:
+                  constraints:
+                    nullable: false
+                  defaultValueComputed: getdate()
+                  name: LST_MDFD_DTTM
+                  type: datetime
+            tableName: CNTNR_ITEM
+  - changeSet:
+      id: 1765038820683-3
+      author: sleer
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: PK_CNTNR_TYPE
+                  name: CNTNR_TYPE_ID
+                  type: BIGINT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: CNTNR_TYPE_NME
+                  type: NVARCHAR(50)
+              - column:
+                  name: CNTNR_TYPE_DESC
+                  type: NVARCHAR(250)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: CRE_ID
+                  type: NUMBER(18)
+              - column:
+                  constraints:
+                    nullable: false
+                  defaultValueComputed: getdate()
+                  name: CRE_DTTM
+                  type: datetime
+              - column:
+                  constraints:
+                    nullable: false
+                  name: LST_MDFD_ID
+                  type: NUMBER(18)
+              - column:
+                  constraints:
+                    nullable: false
+                  defaultValueComputed: getdate()
+                  name: LST_MDFD_DTTM
+                  type: datetime
+              - column:
+                  name: THEME_ID
+                  type: BIGINT
+            tableName: CNTNR_TYPE
+  - changeSet:
+      id: 1765038820683-4
+      author: sleer
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: PK_GUILD
+                  name: GUILD_ID
+                  type: BIGINT
+              - column:
+                  name: GUILD_NME
+                  type: NVARCHAR(75)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: CRE_ID
+                  type: NUMBER(18)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: CRE_DTTM
+                  type: datetime
+              - column:
+                  constraints:
+                    nullable: false
+                  name: LST_MDFD_ID
+                  type: NUMBER(18)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: LST_MDFD_DTTM
+                  type: datetime
+            tableName: GUILD_DATA
+  - changeSet:
+      id: 1765038820683-5
+      author: sleer
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: PK_ITEM
+                  name: ITEM_ID
+                  type: BIGINT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: ITEM_NME
+                  type: NVARCHAR(75)
+              - column:
+                  name: ITEM_DESC
+                  type: NVARCHAR(2147483647)
+              - column:
+                  name: WEIGHT
+                  type: FLOAT
+              - column:
+                  name: WEIGHT_UNIT
+                  type: NVARCHAR(25)
+              - column:
+                  name: VALUE
+                  type: FLOAT
+              - column:
+                  name: VALUE_UNIT
+                  type: NVARCHAR(25)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: IS_PARENT
+                  type: BOOLEAN
+              - column:
+                  name: CRE_ID
+                  type: BIGINT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: CRE_DTTM
+                  type: datetime
+              - column:
+                  name: LST_MDFD_ID
+                  type: BIGINT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: LST_MDFD_DTTM
+                  type: datetime
+              - column:
+                  name: SRVR_ID
+                  type: BIGINT
+              - column:
+                  name: THEME_ID
+                  type: BIGINT
+            tableName: ITEM
+  - changeSet:
+      id: 1765038820683-6
+      author: sleer
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                  name: ITEM_ATTR_ID
+                  type: BIGINT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: ITEM_ATTR_NAME
+                  type: NVARCHAR(50)
+            tableName: ITEM_ATTR
+  - changeSet:
+      id: 1765038820683-7
+      author: sleer
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: PK_ITEM_SPEC
+                  name: ITEM_SPEC_ID
+                  type: NUMBER(18)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: ITEM_ID
+                  type: NUMBER(18)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: ATTR_ID
+                  type: NUMBER(18)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: VALU
+                  type: NVARCHAR(255)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: CRE_ID
+                  type: NUMBER(18)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: CRE_DTTM
+                  type: datetime
+            tableName: ITEM_SPEC
+  - changeSet:
+      id: 1765038820683-8
+      author: sleer
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: PK_OWNR_TYPE
+                  name: OWNER_ID
+                  type: BIGINT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: DSCD_ID
+                  type: BIGINT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: OWNER_TYPE
+                  type: VARCHAR(10)
+            remarks: Defines owner type objects, which are used to determine where to
+              search for an object's owner
+            tableName: OWNER
+  - changeSet:
+      id: 1765038820683-9
+      author: sleer
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: PK_SYSTEM_OWNER_DATA
+                  name: SYSTEM_OWNER_ID
+                  type: BIGINT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: CRE_DTTM
+                  type: datetime
+            tableName: SYSTEM_OWNER_DATA
+  - changeSet:
+      id: 1765038820683-10
+      author: sleer
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: PK_THEME
+                  name: THEME_ID
+                  type: BIGINT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: THEME_NME
+                  type: NVARCHAR(75)
+              - column:
+                  name: THEME_DESC
+                  type: NVARCHAR(350)
+              - column:
+                  name: CRE_ID
+                  type: BIGINT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: CRE_DTTM
+                  type: datetime
+              - column:
+                  name: LST_MDFD_ID
+                  type: BIGINT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: LST_MDFD_DTTM
+                  type: datetime
+            remarks: The theme running on the client
+            tableName: THEME
+  - changeSet:
+      id: 1765038820683-11
+      author: sleer
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                  name: USER_ID
+                  type: BIGINT
+              - column:
+                  defaultValue: ''
+                  name: USR_NME
+                  type: NVARCHAR(50)
+              - column:
+                  name: USR_TAG
+                  type: NVARCHAR(75)
+              - column:
+                  name: GLBL_USR_NME
+                  type: NVARCHAR(50)
+              - column:
+                  constraints:
+                    nullable: false
+                  defaultValueComputed: getdate()
+                  name: CRE_DTTM
+                  type: datetime
+              - column:
+                  constraints:
+                    nullable: false
+                  name: LST_MDFD_DTTM
+                  type: datetime
+              - column:
+                  name: LST_ACTV_DTTM
+                  type: datetime
+              - column:
+                  name: PRMY_CNTNR_ID
+                  type: BIGINT
+            tableName: USER_DATA
+  - changeSet:
+      id: 1765038820683-12
+      author: sleer
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: PK_USER_SETTINGS
+                  name: STNG_ID
+                  type: BIGINT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: EPHML_CNTNR
+                  type: BOOLEAN
+              - column:
+                  constraints:
+                    nullable: false
+                  name: EPHML_USER
+                  type: BOOLEAN
+              - column:
+                  constraints:
+                    nullable: false
+                  name: EPHML_ITEM
+                  type: BOOLEAN
+            tableName: USER_SETTINGS
+  - changeSet:
+      id: 1765038820683-13
+      author: sleer
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addUniqueConstraint:
+            columnNames: CNTNR_NME, OWNER_ID
+            constraintName: UK_CNTNR_NME_OWNER
+            tableName: CNTNR
+  - changeSet:
+      id: 1765038820683-14
+      author: sleer
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addUniqueConstraint:
+            columnNames: DSCD_ID
+            constraintName: UNIQUE_DISCORD_ID
+            tableName: OWNER
+  - changeSet:
+      id: 1765038820683-15
+      author: sleer
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addUniqueConstraint:
+            columnNames: ITEM_NME, CRE_ID
+            constraintName: UNIQUE_NAME_CRE_ID
+            tableName: ITEM
+  - changeSet:
+      id: 1765038820683-16
+      author: sleer
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: CNTNR_TYPE_ID
+            baseTableName: CNTNR
+            constraintName: FK_CNTNR_CNTNR_TYPE
+            onDelete: NO ACTION
+            referencedColumnNames: CNTNR_TYPE_ID
+            referencedTableName: CNTNR_TYPE
+  - changeSet:
+      id: 1765038820683-17
+      author: sleer
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: CRE_ID
+            baseTableName: CNTNR
+            constraintName: FK_CNTNR_CRE_OWNER
+            onDelete: NO ACTION
+            referencedColumnNames: OWNER_ID
+            referencedTableName: OWNER
+  - changeSet:
+      id: 1765038820683-18
+      author: sleer
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: CNTNR_ID
+            baseTableName: CNTNR_ITEM
+            constraintName: FK_CNTNR_ITEM_CNTNR
+            onDelete: NO ACTION
+            referencedColumnNames: CNTNR_ID
+            referencedTableName: CNTNR
+  - changeSet:
+      id: 1765038820683-19
+      author: sleer
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: ITEM_ID
+            baseTableName: CNTNR_ITEM
+            constraintName: FK_CNTNR_ITEM_ITEM
+            onDelete: NO ACTION
+            referencedColumnNames: ITEM_ID
+            referencedTableName: ITEM
+  - changeSet:
+      id: 1765038820683-20
+      author: sleer
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: PARENT_ID
+            baseTableName: CNTNR_ITEM
+            constraintName: FK_CNTNR_ITEM_PAET_ITEM
+            onDelete: NO ACTION
+            referencedColumnNames: CNTNR_ITEM_ID
+            referencedTableName: CNTNR_ITEM
+  - changeSet:
+      id: 1765038820683-21
+      author: sleer
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: LST_MDFD_ID
+            baseTableName: CNTNR
+            constraintName: FK_CNTNR_MDFD_OWNER
+            onDelete: NO ACTION
+            referencedColumnNames: OWNER_ID
+            referencedTableName: OWNER
+  - changeSet:
+      id: 1765038820683-22
+      author: sleer
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: OWNER_ID
+            baseTableName: CNTNR
+            constraintName: FK_CNTNR_OWNER
+            onDelete: NO ACTION
+            referencedColumnNames: OWNER_ID
+            referencedTableName: OWNER
+  - changeSet:
+      id: 1765038820683-23
+      author: sleer
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: THEME_ID
+            baseTableName: CNTNR
+            constraintName: FK_CNTNR_THEME
+            onDelete: NO ACTION
+            referencedColumnNames: THEME_ID
+            referencedTableName: THEME
+  - changeSet:
+      id: 1765038820683-24
+      author: sleer
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: THEME_ID
+            baseTableName: CNTNR_TYPE
+            constraintName: FK_CNTNR_TYPE_THEME
+            onDelete: NO ACTION
+            referencedColumnNames: THEME_ID
+            referencedTableName: THEME
+  - changeSet:
+      id: 1765038820683-25
+      author: sleer
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: GUILD_ID
+            baseTableName: GUILD_DATA
+            constraintName: FK_GUILD_OWNER
+            onDelete: NO ACTION
+            referencedColumnNames: OWNER_ID
+            referencedTableName: OWNER
+  - changeSet:
+      id: 1765038820683-26
+      author: sleer
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: CRE_ID
+            baseTableName: ITEM
+            constraintName: FK_ITEM_CRE_OWNER
+            onDelete: NO ACTION
+            referencedColumnNames: OWNER_ID
+            referencedTableName: OWNER
+  - changeSet:
+      id: 1765038820683-27
+      author: sleer
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: LST_MDFD_ID
+            baseTableName: ITEM
+            constraintName: FK_ITEM_MDFD_OWNER
+            onDelete: NO ACTION
+            referencedColumnNames: OWNER_ID
+            referencedTableName: OWNER
+  - changeSet:
+      id: 1765038820683-28
+      author: sleer
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: THEME_ID
+            baseTableName: ITEM
+            constraintName: FK_ITEM_THEME
+            onDelete: NO ACTION
+            referencedColumnNames: THEME_ID
+            referencedTableName: THEME
+  - changeSet:
+      id: 1765038820683-29
+      author: sleer
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: SYSTEM_OWNER_ID
+            baseTableName: SYSTEM_OWNER_DATA
+            constraintName: FK_SYSTEM_OWNER_DATA_OWNER
+            onDelete: NO ACTION
+            referencedColumnNames: OWNER_ID
+            referencedTableName: OWNER
+  - changeSet:
+      id: 1765038820683-30
+      author: sleer
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: CRE_ID
+            baseTableName: THEME
+            constraintName: FK_THEME_CRE_OWNER
+            onDelete: NO ACTION
+            referencedColumnNames: OWNER_ID
+            referencedTableName: OWNER
+  - changeSet:
+      id: 1765038820683-31
+      author: sleer
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: LST_MDFD_ID
+            baseTableName: THEME
+            constraintName: FK_THEME_MDFD_OWNER
+            onDelete: NO ACTION
+            referencedColumnNames: OWNER_ID
+            referencedTableName: OWNER
+  - changeSet:
+      id: 1765038820683-32
+      author: sleer
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: PRMY_CNTNR_ID
+            baseTableName: USER_DATA
+            constraintName: FK_USER_DATA_CNTNR
+            onDelete: NO ACTION
+            referencedColumnNames: CNTNR_ID
+            referencedTableName: CNTNR
+  - changeSet:
+      id: 1765038820683-33
+      author: sleer
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: USER_ID
+            baseTableName: USER_DATA
+            constraintName: FK_USER_DATA_OWNER
+            onDelete: NO ACTION
+            referencedColumnNames: OWNER_ID
+            referencedTableName: OWNER
+  - changeSet:
+      id: 1765038820683-34
+      author: sleer
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: STNG_ID
+            baseTableName: USER_SETTINGS
+            constraintName: FK_USER_SETTINGS_OWNER
+            onDelete: NO ACTION
+            referencedColumnNames: OWNER_ID
+            referencedTableName: OWNER
+

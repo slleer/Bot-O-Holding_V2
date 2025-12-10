@@ -1,0 +1,7 @@
+databaseChangeLog:
+  - include:
+      file: v0001_initial-schema_12-06-2025.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: changes/v0002_add-boh-data-purge-proc_12-07-2025.yaml
+      relativeToChangelogFile: true

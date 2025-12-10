@@ -13,7 +13,8 @@ import java.util.Optional;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserRequestDto {
+public class
+UserRequestDto {
 
 //    @NotNull(message = "Discord ID cannot be null")
 //    private Long discordId;

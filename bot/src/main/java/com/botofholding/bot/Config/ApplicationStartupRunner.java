@@ -75,7 +75,7 @@ public class ApplicationStartupRunner implements ApplicationListener<Application
 
         logger.info("Upserting active theme: '{}'", themeRequestDto.getThemeName());
         apiClient.upsertTheme(themeRequestDto)
-                .doOnSuccess(themeDto -> logger.info("Successfully upserted theme: '{}'", themeDto.getThemeName()))
+                //.doOnSuccess(themeDto -> logger.info("Successfully upserted theme: '{}'", themeDto.getThemeName()))
                 .doOnError(error -> logger.error("Failed to upsert theme after startup.", error))
                 .subscribe();
     }

@@ -4,4 +4,6 @@ import com.botofholding.api.Domain.Entity.ContainerType;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ContainerTypeRepository extends JpaRepository<ContainerType, Long> {
+
+    ContainerType findByContainerTypeName(String containerTypeName);
 }

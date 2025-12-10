@@ -28,6 +28,7 @@ public class ContainerRequestDto {
 
     // Optional: if you want to specify the type on creation
     private String containerTypeName;
+    private Long containerTypeId;
     private boolean isActive;
     public void setContainerName(String containerName) {
         this.containerName = (containerName == null) ? null : containerName.trim();

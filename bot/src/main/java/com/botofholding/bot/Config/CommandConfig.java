@@ -129,7 +129,7 @@ public class CommandConfig {
     private String optionInventoryModifyItemDescription = "Item to edit";
     private String optionInventoryModifyNoteDescription = "Replace existing note or remove by providing an empty string (max 350 characters).";
     private String optionInventoryModifyMoveToRoot = "move-to-root";
-    private String optionInventoryModifyMoveToRootDescription = "Moves item to root of container. Don't use with 'move-inside' option";
-    private String optionInventoryModifyMoveInside = "move-inside";
-    private String optionInventoryModifyMoveInsideDescription = "Moves item inside this item. Don't use with 'move-to-root' option";
+    private String optionInventoryModifyMoveToRootDescription = "Move item to root of container.";
+    private String optionInventoryModifyMoveInside = "move-to";
+    private String optionInventoryModifyMoveInsideDescription = "Moves item inside another item or root of container.";
 }

@@ -80,11 +80,11 @@ public interface ContainerItemRepository extends JpaRepository<ContainerItem, Lo
             """;
 
     @Query(value = AUTOCOMPLETE_CTE + """
-            SELECT TOP 25 ip.cntnr_item_id as id, ip.full_path as label, CONCAT('[id:', ip.cntnr_item_id, '] ', COALESCE('x' + ip.itm_qty + ' ', ''), COALESCE(ip.user_note, '')) as description FROM ItemPath ip WHERE LOWER(ip.full_path) LIKE LOWER(CONCAT('%', :prefix, '%')) ORDER BY label""", nativeQuery = true)
+            SELECT TOP 25 ip.cntnr_item_id as id, ip.full_path as label, CONCAT('[id:', ip.cntnr_item_id, '] ', COALESCE('x' + CAST(ip.itm_qty AS VARCHAR) + ' ', ''), COALESCE(ip.user_note, '')) as description FROM ItemPath ip WHERE LOWER(ip.full_path) LIKE LOWER(CONCAT('%', :prefix, '%')) ORDER BY label""", nativeQuery = true)
     List<AutoCompleteProjection> findItemsForAutocomplete(@Param("prefix") String prefix, @Param("userId") Long userId);
 
     @Query(value = AUTOCOMPLETE_CTE + """
-            SELECT TOP 25 ip.cntnr_item_id as id, ip.full_path as label, CONCAT('[id:', ip.cntnr_item_id, '] ', COALESCE('x' + ip.itm_qty + ' ', ''), COALESCE(ip.user_note, '')) as description FROM ItemPath ip WHERE ip.is_parent = 1 AND LOWER(ip.full_path) LIKE LOWER(CONCAT('%', :prefix, '%')) ORDER BY label""", nativeQuery = true)
+            SELECT TOP 25 ip.cntnr_item_id as id, ip.full_path as label, CONCAT('[id:', ip.cntnr_item_id, '] ', COALESCE('x' + CAST(ip.itm_qty AS VARCHAR) + ' ', ''), COALESCE(ip.user_note, '')) as description FROM ItemPath ip WHERE ip.is_parent = 1 AND LOWER(ip.full_path) LIKE LOWER(CONCAT('%', :prefix, '%')) ORDER BY label""", nativeQuery = true)
     List<AutoCompleteProjection> findParentItemsForAutocomplete(@Param("prefix") String prefix, @Param("userId") Long userId);
 
 }
